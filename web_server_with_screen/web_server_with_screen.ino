@@ -201,6 +201,7 @@ void setup() {
     delay(2000);
     display.clearDisplay();
     display.setTextColor(WHITE);
+    display.display();
   }
 
   if (wifiEnable) {
