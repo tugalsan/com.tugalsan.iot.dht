@@ -1,8 +1,5 @@
 //https://tr.aliexpress.com/item/4001147892727.html?spm=a2g0o.order_list.order_list_main.5.684d3d12UrQbTI&gatewayAdapt=glo2tur
 
-
-
-
 //IMPORT.WIFI
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
@@ -22,8 +19,6 @@
 //GLOBAL.WIFI
 const char* ssid = "MesaMetalWF";
 const char* password = "DateIs01062015";
-//const char* ssid = "APT63_TTNET";
-//const char* password = "mebosamesametal";
 AsyncWebServer server(80);
 
 //GLOBAL.SCREEN
