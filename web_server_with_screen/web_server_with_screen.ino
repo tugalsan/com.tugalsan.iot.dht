@@ -24,13 +24,14 @@ const char* ssid = "MesaMetalWF";
 const char* password = "DateIs01062015";
 //const char* ssid = "APT63_TTNET";
 //const char* password = "mebosamesametal";
-//const char* password = "Bugun19112018";
 AsyncWebServer server(80);
 
 //GLOBAL.SCREEN
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
-#define SCREEN_HEIGHT 64  // OLED display height, in pixels
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+#define SCREEN_HEIGHT 32  // OLED display height, in pixels
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //GLOBAL.DHT
 #define DHTPIN 5       //try 5 4 0 2 15, 16 14 12 13
@@ -197,7 +198,7 @@ void setup() {
 
   if (displayEnable) {
     if (serialEnable) Serial.println(F("display will begin..."));
-    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
       if (serialEnable) Serial.println(F("SSD1306 allocation failed"));
       for (;;)
         ;
