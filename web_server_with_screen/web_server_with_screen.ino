@@ -46,7 +46,7 @@ const char index_html[] PROGMEM = R"rawliteral(
      font-family: Arial;
      display: inline-block;
      margin: 0px auto;
-     text-align: center;
+     text-align: left;
     }
     h2 { font-size: 3.0rem; }
     p { font-size: 3.0rem; }
@@ -54,31 +54,36 @@ const char index_html[] PROGMEM = R"rawliteral(
     .dht-labels{
       font-size: 1.5rem;
       vertical-align:middle;
-      padding-bottom: 15px;
+      padding-bottom: 5px;
     }
   </style>
 </head>
 <body>
   <p>
     <i class="fas fa-tv" style="color:#05228a;"></i> 
-    <span class="dht-labels">Device</span> 
+    <span class="dht-labels">Device:</span> 
     <span id="device">%PH_DEVICE%</span>
   </p>
   <p>
+    <i class="fas fa-paperclip" style="color:#03128a;"></i> 
+    <span class="dht-labels">HTTP:</span> 
+    <span id="ip">%PH_IP%</span>
+  </p>
+  <p>
     <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
-    <span class="dht-labels">Temperature</span> 
+    <span class="dht-labels">Temperature:</span> 
     <span id="temperature">%PH_TEMPERATURE%</span>
     <sup class="units">&deg;C</sup>
   </p>
   <p>
     <i class="fas fa-tint" style="color:#00add6;"></i> 
-    <span class="dht-labels">Humidity</span>
+    <span class="dht-labels">Humidity:</span>
     <span id="humidity">%PH_HUMIDITY%</span>
     <sup class="units">&percnt;</sup>
   </p>
   <p>
     <i class="fas fa-clock" style="color:#000000;"></i> 
-    <span class="dht-labels">Clock</span>
+    <span class="dht-labels">Clock:</span>
     <span id="clock">%PH_CLOCK%</span>
   </p>
 </body>
@@ -167,7 +172,10 @@ String getReadableClock() {
 }
 String processor(const String& var) {  // Replaces placeholder with DHT values
   if (var == "PH_DEVICE") {
-    return mac + " @ " + IpAddress2String(ip);
+    return mac;
+  }
+  if (var == "PH_IP") {
+    return IpAddress2String(ip);
   }
   if (var == "PH_TEMPERATURE") {
     return String(t);
