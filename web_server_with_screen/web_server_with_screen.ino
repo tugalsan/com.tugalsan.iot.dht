@@ -189,6 +189,8 @@ bool displayEnable = true;
 void setup() {
   if (serialEnable) Serial.begin(115200);
 
+  if (serialEnable) Serial.println(F("."));
+  if (serialEnable) Serial.println(F("."));
   if (serialEnable) Serial.println(F("warm-up begin..."));
   delay(500);
 
