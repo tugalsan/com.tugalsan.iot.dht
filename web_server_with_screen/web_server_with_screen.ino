@@ -120,6 +120,7 @@ setInterval(function ( ) {
 float t = 0.0;  //last temperature
 float h = 0.0;  //last humidity
 IPAddress ip;
+String mac;
 String IpAddress2String(const IPAddress& ipAddress)
 {
   return String(ipAddress[0]) + String(".") +\
@@ -166,7 +167,7 @@ String getReadableClock() {
 }
 String processor(const String& var) {  // Replaces placeholder with DHT values
   if (var == "PH_DEVICE") {
-    return IpAddress2String(ip);
+    return mac + " @ " + IpAddress2String(ip);
   }
   if (var == "PH_TEMPERATURE") {
     return String(t);
@@ -187,6 +188,9 @@ bool displayEnable = true;
 
 void setup() {
   if (serialEnable) Serial.begin(115200);
+
+  if (serialEnable) Serial.println(F("warm-up begin..."));
+  delay(500);
 
   if (serialEnable) Serial.println(F("dht will begin..."));
   dht.begin();
@@ -213,6 +217,10 @@ void setup() {
       delay(1000);
       if (serialEnable) Serial.println(".");
     }
+
+    if (serialEnable) Serial.println(F("printing mac..."));
+    mac = WiFi.macAddress();
+    if (serialEnable) Serial.println(mac);
 
     if (serialEnable) Serial.println(F("printing ip..."));
     ip = WiFi.localIP();
