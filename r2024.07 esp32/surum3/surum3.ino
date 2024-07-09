@@ -326,7 +326,7 @@ void wifi_config() {
   //  Serial.println("STA Failed to configure");
   //}
   if (WiFi.status() != WL_CONNECTED) {
-    if (arduino_serial_enable) Serial.print("wifi_config.connecting.failed");
+    if (arduino_serial_enable) Serial.println("wifi_config.connecting.failed");
     //    delay(1000);
     return;
   }
