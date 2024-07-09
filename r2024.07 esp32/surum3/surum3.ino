@@ -26,9 +26,7 @@ unsigned long arduino_loop_begin_ms = 0;
 unsigned long arduino_loop_prev_ms = 0;
 unsigned long arduino_loop_interval_ms = 5000;
 String arduino_readable_clock;
-int arduino_readable_clock_offset_hour = 0;
-int arduino_readable_clock_offset_min = 0;
-int arduino_readable_clock_offset_sec = 0;
+unsigned long arduino_readable_clock_offset_millis = 0;
 String arduino_loop_readable_clock() {
   String readableTime;
   unsigned long currentMillis;
@@ -36,7 +34,7 @@ String arduino_loop_readable_clock() {
   unsigned long minutes;
   unsigned long hours;
   unsigned long days;
-  currentMillis = arduino_loop_begin_ms + arduino_readable_clock_offset_sec * 1000L + arduino_readable_clock_offset_min * 60 * 1000L + arduino_readable_clock_offset_hour * 60 * 60 * 1000L;
+  currentMillis = arduino_loop_begin_ms + arduino_readable_clock_offset_millis;
   seconds = currentMillis / 1000;
   minutes = seconds / 60;
   hours = minutes / 60;
@@ -360,20 +358,18 @@ void wifi_config() {
       int offset_min_int = offset_min_str.toInt();
       int offset_sec_int = offset_sec_str.toInt();
       if (offset_hour_int != 0) {
-        arduino_readable_clock_offset_hour = offset_hour_int;
         if (arduino_serial_enable) Serial.print(F("wifi_config.request->hasParam(offset_hour):"));
         if (arduino_serial_enable) Serial.println(offset_hour_str);
       }
       if (offset_min_int != 0) {
-        arduino_readable_clock_offset_min = offset_min_int;
         if (arduino_serial_enable) Serial.print(F("wifi_config.request->hasParam(offset_min):"));
         if (arduino_serial_enable) Serial.println(offset_min_int);
       }
       if (offset_sec_int != 0) {
-        arduino_readable_clock_offset_sec = offset_sec_int;
         if (arduino_serial_enable) Serial.print(F("wifi_config.request->hasParam(offset_sec):"));
         if (arduino_serial_enable) Serial.println(offset_sec_int);
       }
+      arduino_readable_clock_offset_millis = offset_sec_int * 1000L + offset_min_int * 60 * 1000L + offset_hour_int * 60 * 60 * 1000L;
       arduino_readable_clock = arduino_loop_readable_clock();
       if (arduino_serial_enable) {
         Serial.print(F("wifi_config.request->arduino_readable_clock.new:"));
