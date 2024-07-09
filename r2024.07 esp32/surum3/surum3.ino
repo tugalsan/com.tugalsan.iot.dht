@@ -369,7 +369,7 @@ void wifi_config() {
         if (arduino_serial_enable) Serial.print(F("wifi_config.request->hasParam(offset_sec):"));
         if (arduino_serial_enable) Serial.println(offset_sec_int);
       }
-      arduino_readable_clock_offset_millis = offset_sec_int * 1000L + offset_min_int * 60 * 1000L + offset_hour_int * 60 * 60 * 1000L;
+      arduino_readable_clock_offset_millis += offset_sec_int * 1000L + offset_min_int * 60 * 1000L + offset_hour_int * 60 * 60 * 1000L;
       arduino_readable_clock = arduino_loop_readable_clock();
       if (arduino_serial_enable) {
         Serial.print(F("wifi_config.request->arduino_readable_clock.new:"));
