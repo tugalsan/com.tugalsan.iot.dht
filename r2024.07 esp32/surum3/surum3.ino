@@ -26,6 +26,9 @@ unsigned long arduino_loop_begin_ms = 0;
 unsigned long arduino_loop_prev_ms = 0;
 unsigned long arduino_loop_interval_ms = 5000;
 String arduino_readable_clock;
+int arduino_readable_clock_offset_date;
+int arduino_readable_clock_offset_time;
+unsigned long arduino_readable_clock_offset_millis;
 String arduino_loop_readable_clock() {
   String readableTime;
   unsigned long currentMillis;
@@ -190,7 +193,7 @@ bool wifi_enable = true;
 bool wifi_verbose = false;
 //const char* wifi_ssid = "MesaMetalWF";
 //const char* wifi_pass = "DateIs01062015";
-const char* wifi_ssid = "Mebosa2";
+const char* wifi_ssid = "Mebosa";
 const char* wifi_pass = "Bugun19112018";
 uint8_t wifi_mac_custom[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 unsigned long wifi_loop_prev_ms = 0;
@@ -213,34 +216,34 @@ const char index_html[] PROGMEM = R"rawliteral(
   <p>
     <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
     <span class="dht-labels">Sic</span> 
-    <span id="temperature">%PH_TEMPERATURE%</span>
+    <span id="temperature">%TMP%</span>
     <sup class="units">&deg;C</sup>
   </p>
   <p>
     <i class="fas fa-tint" style="color:#00add6;"></i> 
     <span class="dht-labels">Nem</span>
-    <span id="humidity">%H%</span>
+    <span id="humidity">%HUM%</span>
     <sup class="units">&percnt;</sup>
   </p>
   <p>
     <i class="fas fa-paperclip" style="color:#03128a;"></i> 
     <span class="dht-labels">SN#</span> 
-    <span id="ip">%M%</span>
+    <span id="ip">%MAC%</span>
   </p>
   <p>
     <i class="fas fa-clock" style="color:#000000;"></i> 
     <span class="dht-labels">CLK</span>
-    <span id="clock">%C%</span>
+    <span id="clock">%CLK%</span>
   </p>
   <p>
     <i class="fas fa-wifi" style="color:#000000;"></i> 
     <span class="dht-labels">WIFI</span>
-    <span id="clock">%W%</span>
+    <span id="clock">%WIFI%</span>
   </p>
   <p>
     <i class="fas fa-tv" style="color:#05228a;"></i> 
     <span class="dht-labels">IP#</span> 
-    <span id="device">%M%</span>
+    <span id="device">%IP%</span>
   </p>
 </body>
 <script>
@@ -278,20 +281,23 @@ setInterval(function ( ) {
 }, 10000 ) ;
 </script>
 </html>)rawliteral";
-String processor(const String& var) {  // Replaces placeholder with DHT values
-  if (var == "M") {
+String index_html_processor(const String& var) {
+  if (var == "IP") {
     return wifi_ip_current;
   }
-  if (var == "T") {
+  if (var == "MAC") {
+    return wifi_setup_mac;
+  }
+  if (var == "TMP") {
     return String(dht_t_chr);
   }
-  if (var == "H") {
+  if (var == "HUM") {
     return String(dht_h_chr);
   }
-  if (var == "W") {
+  if (var == "SSID") {
     return String(wifi_ssid);
   }
-  if (var == "C") {
+  if (var == "CLK") {
     return arduino_readable_clock;
   }
   return String();
@@ -300,6 +306,7 @@ String wifi_ipaddress_2_str(const IPAddress& ipAddress) {
   return String(ipAddress[0]) + String(".") + String(ipAddress[1]) + String(".") + String(ipAddress[2]) + String(".") + String(ipAddress[3]);
 }
 void wifi_setup() {
+  wifi_ip_current = String(F("not connected!"));
   if (!wifi_enable) {
     if (arduino_serial_enable) Serial.println(F("wifi_setup.disabled!"));
     return;
@@ -335,25 +342,40 @@ void wifi_config() {
   if (arduino_serial_enable) Serial.print(F("wifi_config.wifi_ip_current: "));
   if (arduino_serial_enable) Serial.println(wifi_ip_current);
   server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->send_P(200, "text/html", index_html, processor);
+    if (arduino_serial_enable) Serial.println(request->url());
+    request->send_P(200, "text/html", index_html, index_html_processor);
   });
   server.on("/t", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(request->url());
     request->send_P(200, "text/plain", dht_t_chr);
   });
   server.on("/h", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(request->url());
     request->send_P(200, "text/plain", dht_h_chr);
   });
   server.on("/c", HTTP_GET, [](AsyncWebServerRequest* request) {
     if (arduino_serial_enable) Serial.println(request->url());
     if (request->hasParam("date") && request->hasParam("time")) {
-      String date = request->getParam("date")->value();
-      String time = request->getParam("time")->value();
+      String dateStr = request->getParam("date")->value();
+      int dateInt = dateStr.toInt();
+      if (dateInt != 0){
+        arduino_readable_clock_offset_date = dateInt;
+      }
+      String timeStr = request->getParam("time")->value();
+      int timeInt = timeStr.toInt();
+      if (timeInt != 0){
+        arduino_readable_clock_offset_time = timeInt;
+      }
+      if (dateInt != 0  || timeInt != 0){
+        arduino_readable_clock_offset_millis = millis();
+      }
       if (arduino_serial_enable) {
         Serial.print(F("wifi_config.request->hasParam(date):"));
-        Serial.println(date);
+        Serial.println(date.toInt());
         Serial.print(F("wifi_config.request->hasParam(time):"));
-        Serial.print(time);
+        Serial.println(time.toInt());
       }
+
       //TODO DATE AND TIME UPDATE
       if (arduino_serial_enable) {
         Serial.print(F("wifi_config.request->arduino_readable_clock.new:"));
@@ -377,6 +399,7 @@ void wifi_loop() {
   }
   if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.begin"));
   if ((WiFi.status() != WL_CONNECTED) && (arduino_loop_begin_ms - wifi_loop_prev_ms >= wifi_loop_interval_ms)) {
+    wifi_ip_current = String(F("not connected!"));
     if (arduino_serial_enable) Serial.print(millis());
     if (arduino_serial_enable) Serial.println(F("wifi_loop.connecting..."));
     WiFi.disconnect();
