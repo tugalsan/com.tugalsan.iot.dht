@@ -26,9 +26,9 @@ unsigned long arduino_loop_begin_ms = 0;
 unsigned long arduino_loop_prev_ms = 0;
 unsigned long arduino_loop_interval_ms = 5000;
 String arduino_readable_clock;
-int arduino_readable_clock_offset_date;
-int arduino_readable_clock_offset_time;
-unsigned long arduino_readable_clock_offset_millis;
+int arduino_readable_clock_offset_hour = 0;
+int arduino_readable_clock_offset_min = 0;
+int arduino_readable_clock_offset_sec = 0;
 String arduino_loop_readable_clock() {
   String readableTime;
   unsigned long currentMillis;
@@ -36,8 +36,7 @@ String arduino_loop_readable_clock() {
   unsigned long minutes;
   unsigned long hours;
   unsigned long days;
-
-  currentMillis = arduino_loop_begin_ms;
+  currentMillis = arduino_loop_begin_ms + arduino_readable_clock_offset_sec * 1000L + arduino_readable_clock_offset_min * 60 * 1000L + arduino_readable_clock_offset_hour * 60 * 60 * 1000L;
   seconds = currentMillis / 1000;
   minutes = seconds / 60;
   hours = minutes / 60;
@@ -46,15 +45,13 @@ String arduino_loop_readable_clock() {
   seconds %= 60;
   minutes %= 60;
   hours %= 24;
-
-  if (days > 0) {
-    readableTime = String(days) + " ";
+  if (days > 1) {
+    esp_restart();
   }
-
-  if (hours > 0) {
-    readableTime += String(hours) + ".";
+  if (hours < 10) {
+    readableTime += "0";
   }
-
+  readableTime += String(hours) + ".";
   if (minutes < 10) {
     readableTime += "0";
   }
@@ -226,7 +223,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     <sup class="units">&percnt;</sup>
   </p>
   <p>
-    <i class="fas fa-paperclip" style="color:#03128a;"></i> 
+    <i class="fas fa-tv" style="color:#03128a;"></i> 
     <span class="dht-labels">SN#</span> 
     <span id="ip">%MAC%</span>
   </p>
@@ -238,10 +235,10 @@ const char index_html[] PROGMEM = R"rawliteral(
   <p>
     <i class="fas fa-wifi" style="color:#000000;"></i> 
     <span class="dht-labels">WIFI</span>
-    <span id="clock">%WIFI%</span>
+    <span id="clock">%SSID%</span>
   </p>
   <p>
-    <i class="fas fa-tv" style="color:#05228a;"></i> 
+    <i class="fas fa-paperclip" style="color:#05228a;"></i> 
     <span class="dht-labels">IP#</span> 
     <span id="device">%IP%</span>
   </p>
@@ -355,28 +352,29 @@ void wifi_config() {
   });
   server.on("/c", HTTP_GET, [](AsyncWebServerRequest* request) {
     if (arduino_serial_enable) Serial.println(request->url());
-    if (request->hasParam("date") && request->hasParam("time")) {
-      String dateStr = request->getParam("date")->value();
-      int dateInt = dateStr.toInt();
-      if (dateInt != 0){
-        arduino_readable_clock_offset_date = dateInt;
+    if (request->hasParam("offset_hour") && request->hasParam("offset_min") && request->hasParam("offset_sec")) {
+      String offset_hour_str = request->getParam("offset_hour")->value();
+      String offset_min_str = request->getParam("offset_min")->value();
+      String offset_sec_str = request->getParam("offset_sec")->value();
+      int offset_hour_int = offset_hour_str.toInt();
+      int offset_min_int = offset_min_str.toInt();
+      int offset_sec_int = offset_sec_str.toInt();
+      if (offset_hour_int != 0) {
+        arduino_readable_clock_offset_hour = offset_hour_int;
+        if (arduino_serial_enable) Serial.print(F("wifi_config.request->hasParam(offset_hour):"));
+        if (arduino_serial_enable) Serial.println(offset_hour_str);
       }
-      String timeStr = request->getParam("time")->value();
-      int timeInt = timeStr.toInt();
-      if (timeInt != 0){
-        arduino_readable_clock_offset_time = timeInt;
+      if (offset_min_int != 0) {
+        arduino_readable_clock_offset_min = offset_min_int;
+        if (arduino_serial_enable) Serial.print(F("wifi_config.request->hasParam(offset_min):"));
+        if (arduino_serial_enable) Serial.println(offset_min_int);
       }
-      if (dateInt != 0  || timeInt != 0){
-        arduino_readable_clock_offset_millis = millis();
+      if (offset_sec_int != 0) {
+        arduino_readable_clock_offset_sec = offset_sec_int;
+        if (arduino_serial_enable) Serial.print(F("wifi_config.request->hasParam(offset_sec):"));
+        if (arduino_serial_enable) Serial.println(offset_sec_int);
       }
-      if (arduino_serial_enable) {
-        Serial.print(F("wifi_config.request->hasParam(date):"));
-        Serial.println(date.toInt());
-        Serial.print(F("wifi_config.request->hasParam(time):"));
-        Serial.println(time.toInt());
-      }
-
-      //TODO DATE AND TIME UPDATE
+      arduino_readable_clock = arduino_loop_readable_clock();
       if (arduino_serial_enable) {
         Serial.print(F("wifi_config.request->arduino_readable_clock.new:"));
         Serial.println(arduino_readable_clock);
@@ -421,7 +419,6 @@ void setup() {
 
 
 void loop() {
-  //esp_restart() ;
   if (!arduino_loop_begin()) {
     return;
   }
