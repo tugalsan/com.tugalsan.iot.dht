@@ -19,7 +19,7 @@
 #include <U8g2lib.h>
 
 //GLOBAL.ARDUINO
-bool arduino_serial_enable = true;
+bool arduino_serial_enable = false;
 bool arduino_serial_verbose = false;
 long arduino_serial_frequency = 115200;
 unsigned long arduino_loop_begin_ms = 0;
@@ -88,7 +88,7 @@ bool arduino_loop_begin() {
   }
   if (arduino_serial_enable && arduino_serial_verbose) Serial.println(F("arduino_loop_begin.begin"));
   if (arduino_serial_enable) Serial.print(F("Clock: "));
-  if (arduino_serial_enable) Serial.println(arduino_loop_readable_clock());
+  if (arduino_serial_enable) Serial.println(arduino_readable_clock);
   if (arduino_serial_enable && arduino_serial_verbose) Serial.println(F("arduino_loop_begin.end"));
   return true;
 }
