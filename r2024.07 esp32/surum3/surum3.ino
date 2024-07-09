@@ -7,7 +7,7 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 //#include "AsyncTCP.h"//https://github.com/me-no-dev/AsyncTCP/archive/master.zip
-#include <ESPAsyncWebServer.h> // https://github.com/me-no-dev/ESPAsyncWebServer/archive/master.zip
+#include <ESPAsyncWebServer.h>  // https://github.com/me-no-dev/ESPAsyncWebServer/archive/master.zip
 
 //IMPORT.DHT
 #include <Adafruit_Sensor.h>
@@ -190,19 +190,112 @@ bool wifi_enable = true;
 bool wifi_verbose = false;
 //const char* wifi_ssid = "MesaMetalWF";
 //const char* wifi_pass = "DateIs01062015";
-const char* wifi_ssid = "Mebosa";
+const char* wifi_ssid = "Mebosa2";
 const char* wifi_pass = "Bugun19112018";
-uint8_t wifi_mac_custom[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+uint8_t wifi_mac_custom[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 unsigned long wifi_loop_prev_ms = 0;
 unsigned long wifi_loop_interval_ms = 30000;
 String wifi_ip_current;
 String wifi_setup_mac;
-NetworkServer server(80);
+AsyncWebServer server(80);
 //IPAddress local_IP(192, 168, 1, 184);
 //IPAddress gateway(192, 168, 1, 1);
 //IPAddress subnet(255, 255, 0, 0);
 //IPAddress primaryDNS(8, 8, 8, 8);   // optional
 //IPAddress secondaryDNS(8, 8, 4, 4); // optional
+const char index_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+</head>
+<body>
+  <p>
+    <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
+    <span class="dht-labels">Sic</span> 
+    <span id="temperature">%PH_TEMPERATURE%</span>
+    <sup class="units">&deg;C</sup>
+  </p>
+  <p>
+    <i class="fas fa-tint" style="color:#00add6;"></i> 
+    <span class="dht-labels">Nem</span>
+    <span id="humidity">%H%</span>
+    <sup class="units">&percnt;</sup>
+  </p>
+  <p>
+    <i class="fas fa-paperclip" style="color:#03128a;"></i> 
+    <span class="dht-labels">SN#</span> 
+    <span id="ip">%M%</span>
+  </p>
+  <p>
+    <i class="fas fa-clock" style="color:#000000;"></i> 
+    <span class="dht-labels">CLK</span>
+    <span id="clock">%C%</span>
+  </p>
+  <p>
+    <i class="fas fa-wifi" style="color:#000000;"></i> 
+    <span class="dht-labels">WIFI</span>
+    <span id="clock">%W%</span>
+  </p>
+  <p>
+    <i class="fas fa-tv" style="color:#05228a;"></i> 
+    <span class="dht-labels">IP#</span> 
+    <span id="device">%M%</span>
+  </p>
+</body>
+<script>
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("temperature").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/t", true);
+  xhttp.send();
+}, 10000 ) ;
+
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("humidity").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/h", true);
+  xhttp.send();
+}, 10000 ) ;
+
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("clock").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/c", true);
+  xhttp.send();
+}, 10000 ) ;
+</script>
+</html>)rawliteral";
+String processor(const String& var) {  // Replaces placeholder with DHT values
+  if (var == "M") {
+    return wifi_ip_current;
+  }
+  if (var == "T") {
+    return String(dht_t_chr);
+  }
+  if (var == "H") {
+    return String(dht_h_chr);
+  }
+  if (var == "W") {
+    return String(wifi_ssid);
+  }
+  if (var == "C") {
+    return arduino_readable_clock;
+  }
+  return String();
+}
 String wifi_ipaddress_2_str(const IPAddress& ipAddress) {
   return String(ipAddress[0]) + String(".") + String(ipAddress[1]) + String(".") + String(ipAddress[2]) + String(".") + String(ipAddress[3]);
 }
@@ -232,27 +325,54 @@ void wifi_config() {
   //if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
   //  Serial.println("STA Failed to configure");
   //}
-  if (arduino_serial_enable) Serial.println(F("wifi_config.connecting..."));
   if (WiFi.status() != WL_CONNECTED) {
-    if (arduino_serial_enable) Serial.print('.');
-//    delay(1000);
+    if (arduino_serial_enable) Serial.print('wifi_config.connecting.failed');
+    //    delay(1000);
     return;
   }
   if (arduino_serial_enable) Serial.println();
   wifi_ip_current = wifi_ipaddress_2_str(WiFi.localIP());
   if (arduino_serial_enable) Serial.print(F("wifi_config.wifi_ip_current: "));
   if (arduino_serial_enable) Serial.println(wifi_ip_current);
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send_P(200, "text/html", index_html, processor);
+  });
+  server.on("/t", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/h", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send_P(200, "text/plain", dht_h_chr);
+  });
+  server.on("/c", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(request->url());
+    if (request->hasParam("date") && request->hasParam("time")) {
+      String date = request->getParam("date")->value();
+      String time = request->getParam("time")->value();
+      if (arduino_serial_enable) {
+        Serial.print(F("wifi_config.request->hasParam(date):"));
+        Serial.println(date);
+        Serial.print(F("wifi_config.request->hasParam(time):"));
+        Serial.print(time);
+      }
+      //TODO DATE AND TIME UPDATE
+      if (arduino_serial_enable) {
+        Serial.print(F("wifi_config.request->arduino_readable_clock.new:"));
+        Serial.println(arduino_readable_clock);
+      }
+    }
+    request->send_P(200, "text/plain", arduino_readable_clock.c_str());
+  });
   server.begin();
   wifi_config_done = true;
   if (arduino_serial_enable) Serial.println(F("wifi_config.end"));
 }
 void wifi_loop() {
-//  if (!wifi_enable) {
-//    if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.disabled!"));
-//    return;
-//  }
+  //  if (!wifi_enable) {
+  //    if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.disabled!"));
+  //    return;
+  //  }
   wifi_config();
-  if (!wifi_config_done){
+  if (!wifi_config_done) {
     return;
   }
   if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.begin"));
@@ -278,6 +398,7 @@ void setup() {
 
 
 void loop() {
+  //esp_restart() ;
   if (!arduino_loop_begin()) {
     return;
   }
@@ -319,57 +440,6 @@ void loop() {
     } else {
       u8g2.drawStr(0, y, "MOD");
       u8g2.drawStr(x4, y, "Olcum Modu");
-    }
-  }
-  if (wifi_enable && wifi_config_done) {
-
-    NetworkClient client = server.accept();  // listen for incoming clients
-
-    if (client) {                     // if you get a client,
-      Serial.println("New Client.");  // print a message out the serial port
-      String currentLine = "";        // make a String to hold incoming data from the client
-      while (client.connected()) {    // loop while the client's connected
-        if (client.available()) {     // if there's bytes to read from the client,
-          char c = client.read();     // read a byte, then
-          Serial.write(c);            // print it out the serial monitor
-          if (c == '\n') {            // if the byte is a newline character
-
-            // if the current line is blank, you got two newline characters in a row.
-            // that's the end of the client HTTP request, so send a response:
-            if (currentLine.length() == 0) {
-              // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-              // and a content-type so the client knows what's coming, then a blank line:
-              client.println("HTTP/1.1 200 OK");
-              client.println("Content-type:text/html");
-              client.println();
-
-              // the content of the HTTP response follows the header:
-              client.print("Click <a href=\"/H\">here</a> to turn the LED on pin 5 on.<br>");
-              client.print("Click <a href=\"/L\">here</a> to turn the LED on pin 5 off.<br>");
-
-              // The HTTP response ends with another blank line:
-              client.println();
-              // break out of the while loop:
-              break;
-            } else {  // if you got a newline, then clear currentLine:
-              currentLine = "";
-            }
-          } else if (c != '\r') {  // if you got anything else but a carriage return character,
-            currentLine += c;      // add it to the end of the currentLine
-          }
-
-          // Check to see if the client request was "GET /H" or "GET /L":
-          if (currentLine.endsWith("GET /H")) {
-            digitalWrite(5, HIGH);  // GET /H turns the LED on
-          }
-          if (currentLine.endsWith("GET /L")) {
-            digitalWrite(5, LOW);  // GET /L turns the LED off
-          }
-        }
-      }
-      // close the connection:
-      client.stop();
-      Serial.println("Client Disconnected.");
     }
   }
   display_loop_end();
