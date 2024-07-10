@@ -390,27 +390,31 @@ void wifi_config() {
   server.on("/c", HTTP_GET, [](AsyncWebServerRequest* request) {
     if (arduino_serial_enable) Serial.println(request->url());
     int offset_hour_int = 0;
-    int offset_min_int = 0;
-    int offset_sec_int = 0;
     if (request->hasParam("offset_hour")) {
       String offset_hour_str = request->getParam("offset_hour")->value();
       if (arduino_serial_enable) Serial.println(F("offset_hour_str"));
       if (arduino_serial_enable) Serial.println(offset_hour_str);
       offset_hour_int = offset_hour_str.toInt();
     }
+    int offset_min_int = 0;
     if (request->hasParam("offset_min")) {
       String offset_min_str = request->getParam("offset_min")->value();
       if (arduino_serial_enable) Serial.println(F("offset_min_str"));
       if (arduino_serial_enable) Serial.println(offset_min_str);
       offset_min_int = offset_min_str.toInt();
     }
+    int offset_sec_int = 0;
     if (request->hasParam("offset_sec")) {
       String offset_sec_str = request->getParam("offset_sec")->value();
       if (arduino_serial_enable) Serial.println(F("offset_sec_str"));
       if (arduino_serial_enable) Serial.println(offset_sec_str);
       offset_sec_int = offset_sec_str.toInt();
     }
+    if (arduino_serial_enable) Serial.println(F("arduino_readable_clock_offset_millis (prv)"));
+    if (arduino_serial_enable) Serial.println(arduino_readable_clock_offset_millis);
     arduino_readable_clock_offset_millis += offset_sec_int * 1000L + offset_min_int * 60 * 1000L + offset_hour_int * 60 * 60 * 1000L;
+    if (arduino_serial_enable) Serial.println(F("arduino_readable_clock_offset_millis (pst)"));
+    if (arduino_serial_enable) Serial.println(arduino_readable_clock_offset_millis);
     arduino_readable_clock = arduino_loop_readable_clock();
     request->send_P(200, "text/plain", arduino_readable_clock.c_str());
   });
