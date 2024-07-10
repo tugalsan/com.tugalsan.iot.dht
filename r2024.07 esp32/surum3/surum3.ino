@@ -57,7 +57,7 @@ GPIO	Input	Output	Notes
 #include <U8g2lib.h>
 
 //GLOBAL.ARDUINO
-bool arduino_serial_enable = true;
+bool arduino_serial_enable = false;
 bool arduino_serial_verbose = false;
 long arduino_serial_frequency = 115200;
 unsigned long arduino_loop_begin_ms = 0;
@@ -227,7 +227,7 @@ bool wifi_enable = true;
 bool wifi_verbose = false;
 //const char* wifi_ssid = "MesaMetalWF";
 //const char* wifi_pass = "DateIs01062015";
-const char* wifi_ssid = "Mebosa2";
+const char* wifi_ssid = "Mebosa";
 const char* wifi_pass = "Bugun19112018";
 uint8_t wifi_mac_custom[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 unsigned long wifi_loop_prev_ms = 0;
