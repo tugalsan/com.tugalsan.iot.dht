@@ -1,4 +1,42 @@
 //DEVICE https://tr.aliexpress.com/item/1005006269242344.html?spm=a2g0o.order_list.order_list_main.5.50923d12h0gi9A&gatewayAdapt=glo2tur
+/*ESP WROOM 32
+GPIO	Input	Output	Notes
+0	pulled up	OK	outputs PWM signal at boot, must be LOW to enter flashing mode
+1	TX pin	OK	debug output at boot
+2	OK	OK	connected to on-board LED, must be left floating or LOW to enter flashing mode
+3	OK	RX pin	HIGH at boot
+4	OK	OK	
+5	OK	OK	outputs PWM signal at boot, strapping pin
+6	x	x	connected to the integrated SPI flash
+7	x	x	connected to the integrated SPI flash
+8	x	x	connected to the integrated SPI flash
+9	x	x	connected to the integrated SPI flash
+10	x	x	connected to the integrated SPI flash
+11	x	x	connected to the integrated SPI flash
+12	OK	OK	boot fails if pulled high, strapping pin
+13	OK	OK	
+14	OK	OK	outputs PWM signal at boot
+15	OK	OK	outputs PWM signal at boot, strapping pin
+16	OK	OK	
+17	OK	OK	
+18	OK	OK	
+19	OK	OK	
+21	OK	OK	
+22	OK	OK	
+23	OK	OK	
+25	OK	OK	
+26	OK	OK	
+27	OK	OK	
+32	OK	OK	
+33	OK	OK	
+34	OK		input only
+35	OK		input only
+36	OK		input only
+39	OK		input only
+*/
+
+
+
 
 //ARDUINO.IMPORT
 #include <Arduino.h>
@@ -99,17 +137,16 @@ void arduino_loop_end() {
 }
 
 //GLOBAL.DHT
-bool dht_enable = false;
+bool dht_enable = true;
 bool dht_verbose = false;
-#define DHTPIN 5       //try 5 4 0 2 15, 16 14 12 13
-#define DHTTYPE DHT11  // DHT 11
-//#define DHTTYPE    DHT22     // DHT 22 (AM2302)
+#define DHTPIN 23      //esp8266 5 4 0 2 15, 16 14 12 13 | esp32: 23, 21, 27...
+#define DHTTYPE DHT22  // DHT 22 (AM2302)
 //#define DHTTYPE    DHT21     // DHT 21 (AM2301)
 DHT dht(DHTPIN, DHTTYPE);
 float dht_t_flt = 0.0;  //last temperature
 float dht_h_flt = 0.0;  //last humidity
-char dht_t_chr[6];
-char dht_h_chr[6];
+char dht_t_chr[8];
+char dht_h_chr[8];
 void dht_setup() {
   dtostrf(dht_t_flt, 5, 1, dht_t_chr);
   dtostrf(dht_h_flt, 5, 1, dht_h_chr);
@@ -129,6 +166,8 @@ void dht_loop() {
   if (arduino_serial_enable && dht_verbose) Serial.println(F("dht_loop.begin"));
   float newT = dht.readTemperature();
   float newH = dht.readHumidity();
+  //newT = 100;
+  //newH = 100;
   if (isnan(newT) || isnan(newH)) {
     dht_t_flt = 0.0;
     dht_h_flt = 0.0;
@@ -136,8 +175,8 @@ void dht_loop() {
     dht_t_flt = newT;
     dht_h_flt = newH;
   }
-  dtostrf(dht_t_flt, 5, 2, dht_t_chr);
-  dtostrf(dht_h_flt, 5, 2, dht_h_chr);
+  dtostrf(dht_t_flt, 5, 1, dht_t_chr);
+  dtostrf(dht_h_flt, 5, 1, dht_h_chr);
   if (arduino_serial_enable) Serial.print(F("Sic: "));
   if (arduino_serial_enable) Serial.println(dht_t_chr);
   if (arduino_serial_enable) Serial.print(F("Nem: "));
@@ -411,6 +450,7 @@ void setup() {
 }
 
 
+const char DEGREE_SYMBOL[] = { 0xB0, '\0' };
 void loop() {
   if (!arduino_loop_begin()) {
     return;
@@ -419,40 +459,49 @@ void loop() {
   wifi_loop();
   display_loop_begin();
   if (display_enable) {
-    u8g2.setFont(u8g2_font_7x14B_tr);
-
+    //u8g2_font_6x13B_tr | u8g2_font_7x14B_tr | u8g2_font_helvR12_tf
     int y = 13;
-    u8g2.drawStr(0, y, "Sic");
-    u8g2.drawStr(18, y, dht_t_chr);
-    u8g2.drawStr(58, y, ",Nem");
-    u8g2.drawStr(85, y, dht_h_chr);
+    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(4, y, wifi_setup_mac.c_str());
 
-    int yo = 26;
+    int yo = 27;
     int yl = 12;
-    int x3 = 22;
-    int x4 = x3 + 11;
 
     y = yo + yl * 0;
-    u8g2.setFont(u8g2_font_6x13B_tr);
-    u8g2.drawStr(0, y, "SN#");
-    u8g2.drawStr(x3, y, wifi_setup_mac.c_str());
+    u8g2.setFont(u8g2_font_helvR12_tf);
+    u8g2.drawUTF8(0, y + 3, "°");
     u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(8, y, "C:");
+    u8g2.setFont(u8g2_font_7x14_tr);
+    u8g2.drawStr(21, y, dht_t_chr);
+    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(62, y, "%RH:");
+    u8g2.setFont(u8g2_font_7x14_tr);
+    u8g2.drawStr(89, y, dht_h_chr);
 
     y = yo + yl * 1;
+    u8g2.setFont(u8g2_font_7x14B_tr);
     u8g2.drawStr(0, y, "CLK");
-    u8g2.drawStr(x4, y, arduino_readable_clock.c_str());
+    u8g2.setFont(u8g2_font_7x14_tr);
+    u8g2.drawStr(33, y, arduino_readable_clock.c_str());
 
     y = yo + yl * 2;
+    u8g2.setFont(u8g2_font_7x14B_tr);
     u8g2.drawStr(0, y, "WIFI");
-    u8g2.drawStr(x4, y, wifi_ssid);
+    u8g2.setFont(u8g2_font_7x14_tr);
+    u8g2.drawStr(33, y, wifi_ssid);
 
     y = yo + yl * 3;
     if (true) {
+      u8g2.setFont(u8g2_font_7x14B_tr);
       u8g2.drawStr(0, y, "IP#");
-      u8g2.drawStr(x4, y, wifi_ip_current.c_str());
+      u8g2.setFont(u8g2_font_7x14_tr);
+      u8g2.drawStr(33, y, wifi_ip_current.c_str());
     } else {
+      u8g2.setFont(u8g2_font_7x14B_tr);
       u8g2.drawStr(0, y, "MOD");
-      u8g2.drawStr(x4, y, "Olcum Modu");
+      u8g2.setFont(u8g2_font_7x14_tr);
+      u8g2.drawStr(33, y, "Olcum Modu");
     }
   }
   display_loop_end();
