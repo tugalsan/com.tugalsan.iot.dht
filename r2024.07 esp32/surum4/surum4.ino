@@ -226,15 +226,13 @@ void display_loop_end() {
 //GLOBAL.WIFI
 bool wifi_enable = true;
 bool wifi_verbose = false;
-//const char* wifi_ssid = "MesaMetalWF";
-//const char* wifi_pass = "DateIs01062015";
-const char* wifi_ssid = "Mebosa";
-const char* wifi_pass = "Bugun19112018";
 uint8_t wifi_mac_custom[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-unsigned long wifi_loop_prev_ms = 0;
-unsigned long wifi_loop_interval_ms = 30000;
+const uint32_t wifi_loop_interval_ms = 10000;
 String wifi_ip_current;
+String wifi_ssid_current;
+//String wifi_rssi_current;
 String wifi_setup_mac;
+WiFiMulti wifiMulti;
 AsyncWebServer server(80);
 //IPAddress local_IP(192, 168, 1, 184);
 //IPAddress gateway(192, 168, 1, 1);
@@ -330,7 +328,7 @@ String index_html_processor(const String& var) {
     return String(dht_h_chr);
   }
   if (var == "SSID") {
-    return String(wifi_ssid);
+    return String(wifi_ssid_current);
   }
   if (var == "CLK") {
     return arduino_readable_clock;
@@ -340,8 +338,26 @@ String index_html_processor(const String& var) {
 String wifi_ipaddress_2_str(const IPAddress& ipAddress) {
   return String(ipAddress[0]) + String(".") + String(ipAddress[1]) + String(".") + String(ipAddress[2]) + String(".") + String(ipAddress[3]);
 }
-void wifi_setup() {
+void _wifi_global_clear() {
+  wifi_ssid_current = String(F("not connected!"));
+//  wifi_rssi_current = String(F("not connected!"));
   wifi_ip_current = String(F("not connected!"));
+}
+void _wifi_global_load() {
+  wifi_ssid_current = String(WiFi.SSID());
+//  wifi_rssi_current = String(WiFi.RSSI());
+  wifi_ip_current = wifi_ipaddress_2_str(WiFi.localIP());
+  if (arduino_serial_enable) Serial.print(F("_wifi_global_load: "));
+  if (arduino_serial_enable) Serial.print(wifi_ssid_current);
+  if (arduino_serial_enable) Serial.print(F(" | "));
+//  if (arduino_serial_enable) Serial.print(wifi_rssi_current);
+//  if (arduino_serial_enable) Serial.print(F(" | "));
+  if (arduino_serial_enable) Serial.print(wifi_ip_current);
+  if (arduino_serial_enable) Serial.println();
+}
+void wifi_setup() {
+  if (arduino_serial_enable) Serial.println(F("wifi_setup.connecting.init"));
+  _wifi_global_clear();
   if (!wifi_enable) {
     if (arduino_serial_enable) Serial.println(F("wifi_setup.disabled!"));
     return;
@@ -349,33 +365,55 @@ void wifi_setup() {
   if (arduino_serial_enable) Serial.println(F("wifi_setup.begin"));
   WiFi.mode(WIFI_STA);
   esp_wifi_set_mac(WIFI_IF_STA, wifi_mac_custom);
-  WiFi.begin(wifi_ssid, wifi_pass);
   wifi_setup_mac = WiFi.macAddress();
-  if (arduino_serial_enable) Serial.print(F("wifi_config.wifi_setup_mac: "));
+  if (arduino_serial_enable) Serial.print(F("wifi_setup.wifi_setup_mac: "));
   if (arduino_serial_enable) Serial.println(wifi_setup_mac);
+  wifiMulti.addAP("Mebosa", "Bugun19112018");
+  wifiMulti.addAP("Mesametal", "DateIs01062015");
+  wifiMulti.addAP("MesaMetalWF", "DateIs01062015");
+  Serial.println(F("wifi_setup.connecting..."));
+  if (wifiMulti.run() == WL_CONNECTED) {
+    _wifi_global_load();
+  } else {
+    if (arduino_serial_enable) Serial.println("wifi_setup.connecting.failed");
+    _wifi_global_clear();
+  }
   if (arduino_serial_enable) Serial.println(F("wifi_setup.end"));
 }
+bool _wifi_warmup() {
+  if (arduino_serial_enable) Serial.println("wifi_warmup.scaning...");
+  int n = WiFi.scanNetworks();
+  if (arduino_serial_enable) Serial.println("wifi_warmup.scan done");
+  if (n == 0) {
+    if (arduino_serial_enable) Serial.println("wifi_warmup.no networks found");
+  } else {
+    if (arduino_serial_enable) Serial.print("wifi_warmup.");
+    if (arduino_serial_enable) Serial.print(n);
+    if (arduino_serial_enable) Serial.println(" networks found");
+    for (int i = 0; i < n; ++i) {
+      if (arduino_serial_enable) Serial.print("wifi_warmup.itm[");
+      if (arduino_serial_enable) Serial.print(i);
+      if (arduino_serial_enable) Serial.print("]: ");
+      if (arduino_serial_enable) Serial.print(WiFi.SSID(i));
+      if (arduino_serial_enable) Serial.println();
+      delay(10);
+    }
+  }
+  if (wifiMulti.run(wifi_loop_interval_ms) != WL_CONNECTED) {
+    if (arduino_serial_enable) Serial.println("wifi_warmup.connecting.failed");
+    _wifi_global_clear();
+    delay(1000);
+    return false;
+  }
+  _wifi_global_load();
+  return true;
+}
 bool wifi_config_done = false;
-void wifi_config() {
+bool _wifi_config() {
   if (wifi_config_done) {
-    return;
-  }
-  if (!wifi_enable) {
-    if (arduino_serial_enable) Serial.println(F("wifi_config.disabled!"));
-    return;
-  }
-  //if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-  //  Serial.println("STA Failed to configure");
-  //}
-  if (WiFi.status() != WL_CONNECTED) {
-    if (arduino_serial_enable) Serial.println("wifi_config.connecting.failed");
-    //    delay(1000);
-    return;
+    return true;
   }
   if (arduino_serial_enable) Serial.println();
-  wifi_ip_current = wifi_ipaddress_2_str(WiFi.localIP());
-  if (arduino_serial_enable) Serial.print(F("wifi_config.wifi_ip_current: "));
-  if (arduino_serial_enable) Serial.println(wifi_ip_current);
   server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
     if (arduino_serial_enable) Serial.println(request->url());
     request->send_P(200, "text/html", index_html, index_html_processor);
@@ -422,29 +460,17 @@ void wifi_config() {
   server.begin();
   wifi_config_done = true;
   if (arduino_serial_enable) Serial.println(F("wifi_config.end"));
+  return true;
 }
 void wifi_loop() {
-  //  if (!wifi_enable) {
-  //    if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.disabled!"));
-  //    return;
-  //  }
-  wifi_config();
-  if (!wifi_config_done) {
+  if (!wifi_enable) {
+    if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.disabled!"));
     return;
   }
-  if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.begin"));
-  if ((WiFi.status() != WL_CONNECTED) && (arduino_loop_begin_ms - wifi_loop_prev_ms >= wifi_loop_interval_ms)) {
-    wifi_ip_current = String(F("not connected!"));
-    if (arduino_serial_enable) Serial.print(millis());
-    if (arduino_serial_enable) Serial.println(F("wifi_loop.connecting..."));
-    WiFi.disconnect();
-    WiFi.reconnect();
-    wifi_loop_prev_ms = arduino_loop_begin_ms;
-    wifi_ip_current = wifi_ipaddress_2_str(WiFi.localIP());
-    if (arduino_serial_enable) Serial.print(F("wifi_loop.wifi_ip_current: "));
-    if (arduino_serial_enable) Serial.println(wifi_ip_current);
+  if (!_wifi_warmup()){
+    return;
   }
-  if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.end"));
+  _wifi_config();
 }
 
 void setup() {
@@ -494,7 +520,7 @@ void loop() {
     u8g2.setFont(u8g2_font_7x14B_tr);
     u8g2.drawStr(0, y, "WIFI");
     u8g2.setFont(u8g2_font_7x14_tr);
-    u8g2.drawStr(33, y, wifi_ssid);
+    u8g2.drawStr(33, y, wifi_ssid_current.c_str());
 
     y = yo + yl * 3;
     if (true) {
