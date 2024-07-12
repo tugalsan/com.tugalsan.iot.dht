@@ -239,6 +239,17 @@ AsyncWebServer server(80);
 //IPAddress subnet(255, 255, 0, 0);
 //IPAddress primaryDNS(8, 8, 8, 8);   // optional
 //IPAddress secondaryDNS(8, 8, 4, 4); // optional
+String mac2String(byte ar[]) {
+  String s;
+  for (byte i = 0; i < 6; ++i) {
+    char buf[3];
+    sprintf(buf, "%02X", ar[i]);  // J-M-L: slight modification, added the 0 in the format for padding
+    s += buf;
+    if (i < 5) s += ':';
+  }
+  return s;
+}
+String wifi_mac_custom_str = mac2String(wifi_mac_custom);
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
@@ -338,20 +349,26 @@ String index_html_processor(const String& var) {
 String wifi_ipaddress_2_str(const IPAddress& ipAddress) {
   return String(ipAddress[0]) + String(".") + String(ipAddress[1]) + String(".") + String(ipAddress[2]) + String(".") + String(ipAddress[3]);
 }
+bool wifi_connected = false;
 void _wifi_global_clear() {
+  wifi_connected = false;
   wifi_ssid_current = String(F("not connected!"));
-//  wifi_rssi_current = String(F("not connected!"));
+  //  wifi_rssi_current = String(F("not connected!"));
   wifi_ip_current = String(F("not connected!"));
 }
 void _wifi_global_load() {
+  wifi_connected = true;
+  wifi_setup_mac = WiFi.macAddress();
   wifi_ssid_current = String(WiFi.SSID());
-//  wifi_rssi_current = String(WiFi.RSSI());
+  //  wifi_rssi_current = String(WiFi.RSSI());
   wifi_ip_current = wifi_ipaddress_2_str(WiFi.localIP());
   if (arduino_serial_enable) Serial.print(F("_wifi_global_load: "));
   if (arduino_serial_enable) Serial.print(wifi_ssid_current);
+  //  if (arduino_serial_enable) Serial.print(F(" | "));
+  //  if (arduino_serial_enable) Serial.print(wifi_rssi_current);
   if (arduino_serial_enable) Serial.print(F(" | "));
-//  if (arduino_serial_enable) Serial.print(wifi_rssi_current);
-//  if (arduino_serial_enable) Serial.print(F(" | "));
+  if (arduino_serial_enable) Serial.print(wifi_setup_mac);
+  if (arduino_serial_enable) Serial.print(F(" | "));
   if (arduino_serial_enable) Serial.print(wifi_ip_current);
   if (arduino_serial_enable) Serial.println();
 }
@@ -365,9 +382,6 @@ void wifi_setup() {
   if (arduino_serial_enable) Serial.println(F("wifi_setup.begin"));
   WiFi.mode(WIFI_STA);
   esp_wifi_set_mac(WIFI_IF_STA, wifi_mac_custom);
-  wifi_setup_mac = WiFi.macAddress();
-  if (arduino_serial_enable) Serial.print(F("wifi_setup.wifi_setup_mac: "));
-  if (arduino_serial_enable) Serial.println(wifi_setup_mac);
   wifiMulti.addAP("Mebosa", "Bugun19112018");
   wifiMulti.addAP("Mesametal", "DateIs01062015");
   wifiMulti.addAP("MesaMetalWF", "DateIs01062015");
@@ -467,7 +481,7 @@ void wifi_loop() {
     if (arduino_serial_enable && wifi_verbose) Serial.println(F("wifi_loop.disabled!"));
     return;
   }
-  if (!_wifi_warmup()){
+  if (!_wifi_warmup()) {
     return;
   }
   _wifi_config();
@@ -492,8 +506,13 @@ void loop() {
   if (display_enable) {
     //u8g2_font_6x13B_tr | u8g2_font_7x14B_tr | u8g2_font_helvR12_tf
     int y = 13;
-    u8g2.setFont(u8g2_font_7x14B_tr);
-    u8g2.drawStr(4, y, wifi_setup_mac.c_str());
+    if (wifi_connected) {
+      u8g2.setFont(u8g2_font_7x14B_tr);
+      u8g2.drawStr(4, y, wifi_setup_mac.c_str());
+    } else {
+      u8g2.setFont(u8g2_font_7x14B_tr);
+      u8g2.drawStr(4, y, wifi_mac_custom_str.c_str());
+    }
 
     int yo = 27;
     int yl = 12;
@@ -523,7 +542,7 @@ void loop() {
     u8g2.drawStr(33, y, wifi_ssid_current.c_str());
 
     y = yo + yl * 3;
-    if (true) {
+    if (wifi_connected) {
       u8g2.setFont(u8g2_font_7x14B_tr);
       u8g2.drawStr(0, y, "IP#");
       u8g2.setFont(u8g2_font_7x14_tr);
@@ -532,7 +551,7 @@ void loop() {
       u8g2.setFont(u8g2_font_7x14B_tr);
       u8g2.drawStr(0, y, "MOD");
       u8g2.setFont(u8g2_font_7x14_tr);
-      u8g2.drawStr(33, y, "Olcum Modu");
+      u8g2.drawStr(33, y, "Calibration");
     }
   }
   display_loop_end();
