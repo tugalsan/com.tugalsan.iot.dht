@@ -227,7 +227,7 @@ void display_loop_end() {
 bool wifi_enable = true;
 bool wifi_verbose = false;
 //uint8_t wifi_mac_custom[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-uint8_t wifi_mac_custom[] = { 0xC0, 0xA8, 0x07, 0x01, 0x00, 0x00 };//192.168.7.100
+uint8_t wifi_mac_custom[] = { 0x0A, 0x00, 0x00, 0x01, 0x00, 0x01 };//10.0.0.101
 const uint32_t wifi_loop_interval_ms = 10000;
 String wifi_ip_current;
 String wifi_ssid_current;
