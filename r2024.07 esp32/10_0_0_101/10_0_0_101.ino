@@ -237,7 +237,9 @@ IPAddress gateway(10, 0, 0, 138);
 IPAddress subnet(255, 255, 0, 0);
 IPAddress primaryDNS(8, 8, 8, 8);    // optional
 IPAddress secondaryDNS(8, 8, 4, 4);  // optional
-const uint32_t wifi_loop_interval_ms = 10000;
+const uint32_t wifi_connection_timeout_ms = 10000;
+uint32_t wifi_connection_previous_ms = 0;
+const uint32_t wifi_connection_interval_ms = 60000;
 String wifi_ip_current;
 String wifi_ssid_current;
 //String wifi_rssi_current;
@@ -260,16 +262,6 @@ const char index_html[] PROGMEM = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-  <script>
-      function toggled(el) {
-        var isChecked = el.parentElement.getElementsByClassName("toggle-checkbox")[0];
-        if (isChecked.checked == true) {
-          isChecked.checked = false;
-        } else {
-          isChecked.checked = true;
-        }
-      }
-  </script>
   <style>
       .toggle {
         position: relative;
@@ -326,137 +318,55 @@ const char index_html[] PROGMEM = R"rawliteral(
       }
   </style>
   <script>
-    setInterval(function ( ) {
+    function refreshId(id, servlet){
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("temperature").innerHTML = this.responseText;
+          document.getElementById(id).innerHTML = this.responseText;
         }
       };
-      xhttp.open("GET", "/t", true);
+      xhttp.open("GET", "/" + servlet + pinIdx, true);
       xhttp.send();
-    }, 10000 ) ;
+    }
+    function refreshPin(pinIdx){
+      refreshId("D" + pinIdx, "D" + pinIdx);
+    }
+    function set(pinIdx){
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          refreshPin(pinIdx);
+        }
+      };
+      xhttp.open("GET", "/S" + pinIdx, true);
+      xhttp.send();
+    }
+    function toggled(el, pinIdx) {
+      var isChecked = el.parentElement.getElementsByClassName("toggle-checkbox")[0];
+      if (isChecked.checked == true) {
+        isChecked.checked = false;
+        document.getElementById("D" + pinIdx).innerHTML = "⌛";
+        set(pinIdx);
+      } else {
+        isChecked.checked = true;
+        document.getElementById("D" + pinIdx).innerHTML = "⌛";
+        set(pinIdx);
+      }
+    }
+    setInterval(function () { refreshId('temperature', 't') }, 10000 ) ;
+    setInterval(function () { refreshId('humidity', 'h') }, 10000 ) ;
+    setInterval(function () { refreshId('clock', 'c') }, 10000 ) ;
+    setInterval(function () { refreshId('clock', 'c') }, 10000 ) ;
 
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("humidity").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/h", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("clock").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/c", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D04").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D04", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D13").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D13", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D18").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D18", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D19").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D19", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D25").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D25", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D26").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D26", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D27").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D27", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D32").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D32", true);
-      xhttp.send();
-    }, 10000 ) ;
-    
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D33").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D33", true);
-      xhttp.send();
-    }, 10000 ) ;
+    setInterval(function () { refreshPin('4') }, 10000 ) ;
+    setInterval(function () { refreshPin('13') }, 10000 ) ;
+    setInterval(function () { refreshPin('13') }, 10000 ) ;
+    setInterval(function () { refreshPin('19') }, 10000 ) ;
+    setInterval(function () { refreshPin('25') }, 10000 ) ;
+    setInterval(function () { refreshPin('26') }, 10000 ) ;
+    setInterval(function () { refreshPin('27') }, 10000 ) ;
+    setInterval(function () { refreshPin('32') }, 10000 ) ;
+    setInterval(function () { refreshPin('33') }, 10000 ) ;
     </script>
 </head>
 <body>
@@ -493,103 +403,85 @@ const char index_html[] PROGMEM = R"rawliteral(
     <span id="device">%IP%</span>
   </p>
   <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D04:</span> 
       <span id="D04">%D04%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D04cb" class="toggle-checkbox" />
         <label for="D04cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
   <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D13:</span> 
       <span id="D13">%D13%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D13cb" class="toggle-checkbox" />
         <label for="D13cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
   <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D18:</span> 
       <span id="D18">%D18%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D18cb" class="toggle-checkbox" />
         <label for="D18cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
   <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D19:</span> 
       <span id="D19">%D19%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D19cb" class="toggle-checkbox" />
         <label for="D19cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
   <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D25:</span> 
       <span id="D25">%D25%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D25cb" class="toggle-checkbox" />
         <label for="D25cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
    <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D26:</span> 
       <span id="D26">%D26%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D26cb" class="toggle-checkbox" />
         <label for="D26cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
   <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D27:</span> 
       <span id="D27">%D27%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D27cb" class="toggle-checkbox" />
         <label for="D27cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
   <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D32:</span> 
       <span id="D32">%D32%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D32cb" class="toggle-checkbox" />
         <label for="D32cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
   <p>
-    <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D33:</span> 
       <span id="D33">%D33%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
         <input type="checkbox" id="D33cb" class="toggle-checkbox" />
         <label for="D33cb" class="toggle"> </label>
-      </div>
-    </div>
+      </span>
   </p>
 </body>
 </html>)rawliteral";
@@ -708,7 +600,16 @@ void wifi_setup() {
   }
   if (arduino_serial_enable) Serial.println(F("wifi_setup.end"));
 }
+bool wifi_warmup = false;
 bool _wifi_warmup() {
+  if (wifi_warmup) {
+    if (wifi_connection_previous_ms > arduino_loop_begin_ms) {
+      wifi_connection_previous_ms = arduino_loop_begin_ms;
+    }
+    if (arduino_loop_begin_ms - wifi_connection_previous_ms < wifi_connection_interval_ms) {
+      return true;
+    }
+  }
   if (arduino_serial_enable) Serial.println("wifi_warmup.scaning...");
   int n = WiFi.scanNetworks();
   if (arduino_serial_enable) Serial.println("wifi_warmup.scan done");
@@ -727,13 +628,15 @@ bool _wifi_warmup() {
       delay(10);
     }
   }
-  if (wifiMulti.run(wifi_loop_interval_ms) != WL_CONNECTED) {
+  if (wifiMulti.run(wifi_connection_timeout_ms) != WL_CONNECTED) {
     if (arduino_serial_enable) Serial.println("wifi_warmup.connecting.failed");
     _wifi_global_clear();
     delay(1000);
+    wifi_warmup = false;
     return false;
   }
   _wifi_global_load();
+  wifi_warmup = true;
   return true;
 }
 bool wifi_config_done = false;
