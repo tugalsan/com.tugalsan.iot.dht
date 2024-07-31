@@ -404,28 +404,6 @@ const char index_html[] PROGMEM = R"rawliteral(
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D21").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D21", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D22").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D22", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
           document.getElementById("D23").innerHTML = this.responseText;
         }
       };
@@ -558,28 +536,6 @@ const char index_html[] PROGMEM = R"rawliteral(
   <p>
     <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
-      <span class="dht-labels">D21:</span> 
-      <span id="D21">%D21%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
-        <input type="checkbox" id="D21cb" class="toggle-checkbox" />
-        <label for="D21cb" class="toggle"> </label>
-      </div>
-    </div>
-  </p>
-  <p>
-    <div>
-      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
-      <span class="dht-labels">D22:</span> 
-      <span id="D22">%D22%</span>
-      <div class="idm-switch_div div-container" onclick="toggled(this)">
-        <input type="checkbox" id="D22cb" class="toggle-checkbox" />
-        <label for="D22cb" class="toggle"> </label>
-      </div>
-    </div>
-  </p>
-  <p>
-    <div>
-      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
       <span class="dht-labels">D25:</span> 
       <span id="D25">%D25%</span>
       <div class="idm-switch_div div-container" onclick="toggled(this)">
@@ -654,13 +610,13 @@ String index_html_processor(const String& var) {
   if (var == "D19") {
     return String(digitalRead(19));
   }
-  if (var == "D21") {
-    return String(digitalRead(21));
-  }
-  if (var == "D22") {
-    return String(digitalRead(22));
-  }
-  //if (var == "D23") {
+//  if (var == "D21") {//SDA
+//    return String(digitalRead(21));
+//  }
+//  if (var == "D22") {//SCL
+//    return String(digitalRead(22));
+//  }
+  //if (var == "D23") {//DHT
   //  return String(digitalRead(23));
   //}
   if (var == "D25") {
@@ -813,48 +769,59 @@ bool _wifi_config() {
     request->send_P(200, "text/plain", arduino_readable_clock.c_str());
   });
   server.on("/D04", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(4)));
-    request->send_P(200, "text/plain", dht_t_chr);
+    String val = digitalRead(4) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D13", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(13)));
-    request->send_P(200, "text/plain", dht_t_chr);
+    String val = digitalRead(13) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D18", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(18)));
-    request->send_P(200, "text/plain", dht_t_chr);
+    String val = digitalRead(18) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D19", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(19)));
-    request->send_P(200, "text/plain", dht_t_chr);
+    String val = digitalRead(19) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
   });
-  server.on("/D21", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(21)));
-    request->send_P(200, "text/plain", dht_t_chr);
-  });
-  server.on("/D22", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(22)));
-    request->send_P(200, "text/plain", dht_t_chr);
-  });
+//  server.on("/D21", HTTP_GET, [](AsyncWebServerRequest* request) {//SDA
+//    String val = digitalRead(21) == HIGH ? F("ON") : F("0FF");
+//    if (arduino_serial_enable) Serial.println(val);
+//    request->send_P(200, "text/plain", val.c_str());
+//  });
+//  server.on("/D22", HTTP_GET, [](AsyncWebServerRequest* request) {//SCL
+//    String val = digitalRead(22) == HIGH ? F("ON") : F("0FF");
+//    if (arduino_serial_enable) Serial.println(val);
+//    request->send_P(200, "text/plain", val.c_str());
+//  });
 //  server.on("/D23", HTTP_GET, [](AsyncWebServerRequest* request) {//DHT
-//    if (arduino_serial_enable) Serial.println(String(digitalRead(4)));
-//    request->send_P(200, "text/plain", dht_t_chr);
+//    String val = digitalRead(23) == HIGH ? F("ON") : F("0FF");
+//    if (arduino_serial_enable) Serial.println(val);
+//    request->send_P(200, "text/plain", val.c_str());
 //  });
   server.on("/D25", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(25)));
-    request->send_P(200, "text/plain", dht_t_chr);
+    String val = digitalRead(25) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D27", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(4)));
-    request->send_P(200, "text/plain", dht_t_chr);
+    String val = digitalRead(27) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D32", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(32)));
-    request->send_P(200, "text/plain", dht_t_chr);
+    String val = digitalRead(32) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D33", HTTP_GET, [](AsyncWebServerRequest* request) {
-    if (arduino_serial_enable) Serial.println(String(digitalRead(33)));
-    request->send_P(200, "text/plain", dht_t_chr);
+    String val = digitalRead(33) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
   });
   server.begin();
   wifi_config_done = true;

@@ -368,8 +368,8 @@ String index_html_processor(const String& var) {
     s += F(" 13:") + String(digitalRead(13));
     s += F(" 18:") + String(digitalRead(18));
     s += F(" 19:") + String(digitalRead(19));
-    s += F(" 21:") + String(digitalRead(21));
-    s += F(" 22:") + String(digitalRead(22));
+    //s += F(" 21:") + String(digitalRead(21));//SDA
+    //s += F(" 22:") + String(digitalRead(22));//SCL
     //s += " 23:" + String(digitalRead(23));DHT
     s += F(" 25:") + String(digitalRead(25));
     s += F(" 27:") + String(digitalRead(27));
@@ -537,12 +537,12 @@ void setup() {
     pinMode(18, OUTPUT);
     digitalWrite(19, LOW);
     pinMode(19, OUTPUT);
-    digitalWrite(21, LOW);
-    pinMode(21, OUTPUT);
-    digitalWrite(22, LOW);
-    pinMode(22, OUTPUT);
-    //digitalWrite(23, LOW);
-    //pinMode(23, OUTPUT);//DHT
+    //digitalWrite(21, LOW);//SDA
+    //pinMode(21, OUTPUT);
+    //digitalWrite(22, LOW);//SCL
+    //pinMode(22, OUTPUT);
+    //digitalWrite(23, LOW);//DHT
+    //pinMode(23, OUTPUT);
     digitalWrite(25, LOW);
     pinMode(25, OUTPUT);
     digitalWrite(26, LOW);
