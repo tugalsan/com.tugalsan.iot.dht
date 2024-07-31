@@ -610,12 +610,12 @@ String index_html_processor(const String& var) {
   if (var == "D19") {
     return String(digitalRead(19));
   }
-//  if (var == "D21") {//SDA
-//    return String(digitalRead(21));
-//  }
-//  if (var == "D22") {//SCL
-//    return String(digitalRead(22));
-//  }
+  //  if (var == "D21") {//SDA
+  //    return String(digitalRead(21));
+  //  }
+  //  if (var == "D22") {//SCL
+  //    return String(digitalRead(22));
+  //  }
   //if (var == "D23") {//DHT
   //  return String(digitalRead(23));
   //}
@@ -788,21 +788,21 @@ bool _wifi_config() {
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
-//  server.on("/D21", HTTP_GET, [](AsyncWebServerRequest* request) {//SDA
-//    String val = digitalRead(21) == HIGH ? F("ON") : F("0FF");
-//    if (arduino_serial_enable) Serial.println(val);
-//    request->send_P(200, "text/plain", val.c_str());
-//  });
-//  server.on("/D22", HTTP_GET, [](AsyncWebServerRequest* request) {//SCL
-//    String val = digitalRead(22) == HIGH ? F("ON") : F("0FF");
-//    if (arduino_serial_enable) Serial.println(val);
-//    request->send_P(200, "text/plain", val.c_str());
-//  });
-//  server.on("/D23", HTTP_GET, [](AsyncWebServerRequest* request) {//DHT
-//    String val = digitalRead(23) == HIGH ? F("ON") : F("0FF");
-//    if (arduino_serial_enable) Serial.println(val);
-//    request->send_P(200, "text/plain", val.c_str());
-//  });
+  //  server.on("/D21", HTTP_GET, [](AsyncWebServerRequest* request) {//SDA
+  //    String val = digitalRead(21) == HIGH ? F("ON") : F("0FF");
+  //    if (arduino_serial_enable) Serial.println(val);
+  //    request->send_P(200, "text/plain", val.c_str());
+  //  });
+  //  server.on("/D22", HTTP_GET, [](AsyncWebServerRequest* request) {//SCL
+  //    String val = digitalRead(22) == HIGH ? F("ON") : F("0FF");
+  //    if (arduino_serial_enable) Serial.println(val);
+  //    request->send_P(200, "text/plain", val.c_str());
+  //  });
+  //  server.on("/D23", HTTP_GET, [](AsyncWebServerRequest* request) {//DHT
+  //    String val = digitalRead(23) == HIGH ? F("ON") : F("0FF");
+  //    if (arduino_serial_enable) Serial.println(val);
+  //    request->send_P(200, "text/plain", val.c_str());
+  //  });
   server.on("/D25", HTTP_GET, [](AsyncWebServerRequest* request) {
     String val = digitalRead(25) == HIGH ? F("ON") : F("0FF");
     if (arduino_serial_enable) Serial.println(val);
@@ -844,7 +844,58 @@ void setup() {
   wifi_setup();
   display_setup();
   dht_setup();
+  //VIN GND [13]  12   14  [27] [26] [25] [33] [32] (35) (34)  VN   VP   EN
+  //3V3 GND  15   02  [04]  R2   T2   06  [18] [19] [21]  R0   T0  [22] [23]
+  // [in/out] (in)
+  if (true) {
+    digitalWrite(4, LOW);
+    pinMode(4, OUTPUT);
+    digitalWrite(13, LOW);
+    pinMode(13, OUTPUT);
+    digitalWrite(18, LOW);
+    pinMode(18, OUTPUT);
+    digitalWrite(19, LOW);
+    pinMode(19, OUTPUT);
+    //digitalWrite(21, LOW);//SDA
+    //pinMode(21, OUTPUT);
+    //digitalWrite(22, LOW);//SCL
+    //pinMode(22, OUTPUT);
+    //digitalWrite(23, LOW);//DHT
+    //pinMode(23, OUTPUT);
+    digitalWrite(25, LOW);
+    pinMode(25, OUTPUT);
+    digitalWrite(26, LOW);
+    pinMode(26, OUTPUT);
+    digitalWrite(27, LOW);
+    pinMode(27, OUTPUT);
+    digitalWrite(32, LOW);
+    pinMode(32, OUTPUT);
+    digitalWrite(33, LOW);
+    pinMode(33, OUTPUT);
+  }
+  if (true) {
+    pinMode(34, INPUT);
+    pinMode(35, INPUT);
+  }
 }
+
+
+void toggleALL() {
+  toggleTrue = !toggleTrue;
+  digitalWrite(4, toggleTrue ? HIGH : LOW);
+  digitalWrite(13, toggleTrue ? HIGH : LOW);
+  digitalWrite(18, toggleTrue ? HIGH : LOW);
+  digitalWrite(19, toggleTrue ? HIGH : LOW);
+  //digitalWrite(21, toggleTrue ? HIGH : LOW);//SDA
+  //digitalWrite(22, toggleTrue ? HIGH : LOW);//SCL
+  //digitalWrite(23, toggleTrue ? HIGH : LOW);//DHT
+  digitalWrite(25, toggleTrue ? HIGH : LOW);
+  digitalWrite(26, toggleTrue ? HIGH : LOW);
+  digitalWrite(27, toggleTrue ? HIGH : LOW);
+  digitalWrite(32, toggleTrue ? HIGH : LOW);
+  digitalWrite(33, toggleTrue ? HIGH : LOW);
+}
+
 
 
 const char DEGREE_SYMBOL[] = { 0xB0, '\0' };
@@ -852,7 +903,7 @@ void loop() {
   if (!arduino_loop_begin()) {
     return;
   }
-
+  toggleALL();
   dht_loop();
   wifi_loop();
   display_loop_begin();
