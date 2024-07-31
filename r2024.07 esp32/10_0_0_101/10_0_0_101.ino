@@ -426,6 +426,17 @@ const char index_html[] PROGMEM = R"rawliteral(
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D26").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D26", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
           document.getElementById("D27").innerHTML = this.responseText;
         }
       };
@@ -544,6 +555,17 @@ const char index_html[] PROGMEM = R"rawliteral(
       </div>
     </div>
   </p>
+   <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D26:</span> 
+      <span id="D26">%D26%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D26cb" class="toggle-checkbox" />
+        <label for="D26cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
   <p>
     <div>
       <i class="fas fa-paperclip" style="color:#05228a;"></i> 
@@ -621,6 +643,9 @@ String index_html_processor(const String& var) {
   //}
   if (var == "D25") {
     return String(digitalRead(25));
+  }
+  if (var == "D26") {
+    return String(digitalRead(26));
   }
   if (var == "D27") {
     return String(digitalRead(27));
@@ -808,6 +833,11 @@ bool _wifi_config() {
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
+  server.on("/D26", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = digitalRead(26) == HIGH ? F("ON") : F("0FF");
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
   server.on("/D27", HTTP_GET, [](AsyncWebServerRequest* request) {
     String val = digitalRead(27) == HIGH ? F("ON") : F("0FF");
     if (arduino_serial_enable) Serial.println(val);
@@ -879,7 +909,7 @@ void setup() {
   }
 }
 
-
+bool toggleTrue = true;
 void toggleALL() {
   toggleTrue = !toggleTrue;
   digitalWrite(4, toggleTrue ? HIGH : LOW);
