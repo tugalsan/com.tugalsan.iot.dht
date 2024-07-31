@@ -662,6 +662,11 @@ void _wifi_global_clear() {
 }
 void _wifi_global_load() {
   wifi_connected = true;
+  if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    if (arduino_serial_enable) Serial.println("wifi_setup.static ip.ok");
+  } else {
+    if (arduino_serial_enable) Serial.println("wifi_setup.static ip.failed");
+  }
   wifi_setup_mac = WiFi.macAddress();
   wifi_ssid_current = String(WiFi.SSID());
   //  wifi_rssi_current = String(WiFi.RSSI());
@@ -678,11 +683,6 @@ void _wifi_global_load() {
 }
 void wifi_setup() {
   if (arduino_serial_enable) Serial.println(F("wifi_setup.connecting.init"));
-  if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-    if (arduino_serial_enable) Serial.println("wifi_setup.static ip.ok");
-  } else {
-    if (arduino_serial_enable) Serial.println("wifi_setup.static ip.failed");
-  }
   _wifi_global_clear();
   if (!wifi_enable) {
     if (arduino_serial_enable) Serial.println(F("wifi_setup.disabled!"));
