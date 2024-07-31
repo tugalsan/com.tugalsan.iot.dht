@@ -136,6 +136,7 @@ void arduino_loop_end() {
   arduino_loop_prev_ms = arduino_loop_begin_ms;
   if (arduino_serial_enable && arduino_serial_verbose) Serial.println(F("arduino_loop_end.end"));
 }
+
 String getStr(int pinIdx) {
   return digitalRead(pinIdx) == HIGH ? F("ON") : F("0FF");
 }
@@ -234,12 +235,12 @@ IPAddress local_IP(10, 0, 0, 101);
 IPAddress gateway(10, 0, 0, 138);
 //IPAddress gateway(192, 168, 5, 1);
 //IPAddress gateway(192, 168, 7, 2);
-IPAddress subnet(255, 255, 0, 0);
+IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(8, 8, 8, 8);    // optional
 IPAddress secondaryDNS(8, 8, 4, 4);  // optional
 const uint32_t wifi_connection_timeout_ms = 10000;
 uint32_t wifi_connection_previous_ms = 0;
-const uint32_t wifi_connection_interval_ms = 60000;
+const uint32_t wifi_connection_interval_ms = 10000;
 String wifi_ip_current;
 String wifi_ssid_current;
 //String wifi_rssi_current;
@@ -262,7 +263,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-  <style>
+<style>
       .toggle {
         position: relative;
         display: inline-block;
@@ -357,7 +358,6 @@ const char index_html[] PROGMEM = R"rawliteral(
     setInterval(function () { refreshId('humidity', 'h') }, 10000 ) ;
     setInterval(function () { refreshId('clock', 'c') }, 10000 ) ;
     setInterval(function () { refreshId('clock', 'c') }, 10000 ) ;
-
     setInterval(function () { refreshPin('4') }, 10000 ) ;
     setInterval(function () { refreshPin('13') }, 10000 ) ;
     setInterval(function () { refreshPin('13') }, 10000 ) ;
@@ -554,7 +554,7 @@ void _wifi_global_clear() {
 }
 void _wifi_global_load() {
   wifi_connected = true;
-  if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+   if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
     if (arduino_serial_enable) Serial.println("wifi_setup.static ip.ok");
   } else {
     if (arduino_serial_enable) Serial.println("wifi_setup.static ip.failed");
@@ -602,7 +602,7 @@ void wifi_setup() {
 }
 bool wifi_warmup = false;
 bool _wifi_warmup() {
-  if (wifi_warmup) {
+   if (false && wifi_warmup) {
     if (wifi_connection_previous_ms > arduino_loop_begin_ms) {
       wifi_connection_previous_ms = arduino_loop_begin_ms;
     }
@@ -628,7 +628,8 @@ bool _wifi_warmup() {
       delay(10);
     }
   }
-  if (wifiMulti.run(wifi_connection_timeout_ms) != WL_CONNECTED) {
+  //if (wifiMulti.run(wifi_connection_timeout_ms) != WL_CONNECTED) {
+  if (wifiMulti.run() != WL_CONNECTED) {
     if (arduino_serial_enable) Serial.println("wifi_warmup.connecting.failed");
     _wifi_global_clear();
     delay(1000);
@@ -803,7 +804,6 @@ void setup() {
     pinMode(35, INPUT);
   }
 }
-
 bool toggleTrue = true;
 void toggleALL() {
   toggleTrue = !toggleTrue;
@@ -820,9 +820,6 @@ void toggleALL() {
   digitalWrite(32, toggleTrue ? HIGH : LOW);
   digitalWrite(33, toggleTrue ? HIGH : LOW);
 }
-
-
-
 const char DEGREE_SYMBOL[] = { 0xB0, '\0' };
 void loop() {
   if (!arduino_loop_begin()) {
