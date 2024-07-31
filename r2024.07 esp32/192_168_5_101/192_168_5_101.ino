@@ -36,6 +36,7 @@ GPIO	Input	Output	Notes
 */
 
 
+bool toggleTrue = true;
 
 
 //ARDUINO.IMPORT
@@ -227,7 +228,7 @@ void display_loop_end() {
 bool wifi_enable = true;
 bool wifi_verbose = false;
 //uint8_t wifi_mac_custom[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-uint8_t wifi_mac_custom[] = { 0xC0, 0xA8, 0x07, 0x01, 0x00, 0x01 };//192.168.7.101
+uint8_t wifi_mac_custom[] = { 0xC0, 0xA8, 0x05, 0x01, 0x00, 0x01 };  //192.168.5.101
 const uint32_t wifi_loop_interval_ms = 10000;
 String wifi_ip_current;
 String wifi_ssid_current;
@@ -290,7 +291,11 @@ const char index_html[] PROGMEM = R"rawliteral(
     <span class="dht-labels">IP#</span> 
     <span id="device">%IP%</span>
   </p>
-</body>
+  <p>
+    <i class="fas fa-mobile-retro" style="color:#05228a;"></i> 
+    <span class="dht-labels">OUT</span> 
+    <span id="out">%OTP%</span>
+  </p>
 <script>
 setInterval(function ( ) {
   var xhttp = new XMLHttpRequest();
@@ -324,7 +329,18 @@ setInterval(function ( ) {
   xhttp.open("GET", "/c", true);
   xhttp.send();
 }, 10000 ) ;
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("out").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/c", true);
+  xhttp.send();
+}, 5000 ) ;
 </script>
+</body>
 </html>)rawliteral";
 String index_html_processor(const String& var) {
   if (var == "IP") {
@@ -344,6 +360,22 @@ String index_html_processor(const String& var) {
   }
   if (var == "CLK") {
     return arduino_readable_clock;
+  }
+  if (var == "OTP") {
+    String s = "";
+    s += F(" TG:") + String(toggleTrue);
+    s += F(" 04:") + String(digitalRead(4));
+    s += F(" 13:") + String(digitalRead(13));
+    s += F(" 18:") + String(digitalRead(18));
+    s += F(" 19:") + String(digitalRead(19));
+    s += F(" 21:") + String(digitalRead(21));
+    s += F(" 22:") + String(digitalRead(22));
+    //s += " 23:" + String(digitalRead(23));DHT
+    s += F(" 25:") + String(digitalRead(25));
+    s += F(" 27:") + String(digitalRead(27));
+    s += F(" 32:") + String(digitalRead(32));
+    s += F(" 33:") + String(digitalRead(33));
+    return s;
   }
   return String();
 }
@@ -493,6 +525,55 @@ void setup() {
   wifi_setup();
   display_setup();
   dht_setup();
+  //VIN GND [13]  12   14  [27] [26] [25] [33] [32] (35) (34)  VN   VP   EN
+  //3V3 GND  15   02  [04]  R2   T2   06  [18] [19] [21]  R0   T0  [22] [23]
+  // [in/out] (in)
+  if (true) {
+    digitalWrite(4, LOW);
+    pinMode(4, OUTPUT);
+    digitalWrite(13, LOW);
+    pinMode(13, OUTPUT);
+    digitalWrite(18, LOW);
+    pinMode(18, OUTPUT);
+    digitalWrite(19, LOW);
+    pinMode(19, OUTPUT);
+    digitalWrite(21, LOW);
+    pinMode(21, OUTPUT);
+    digitalWrite(22, LOW);
+    pinMode(22, OUTPUT);
+    //digitalWrite(23, LOW);
+    //pinMode(23, OUTPUT);//DHT
+    digitalWrite(25, LOW);
+    pinMode(25, OUTPUT);
+    digitalWrite(26, LOW);
+    pinMode(26, OUTPUT);
+    digitalWrite(27, LOW);
+    pinMode(27, OUTPUT);
+    digitalWrite(32, LOW);
+    pinMode(32, OUTPUT);
+    digitalWrite(33, LOW);
+    pinMode(33, OUTPUT);
+  }
+  if (true) {
+    pinMode(34, INPUT);
+    pinMode(35, INPUT);
+  }
+}
+
+void toggleALL() {
+  toggleTrue = !toggleTrue;
+  digitalWrite(4, toggleTrue ? HIGH : LOW);
+  digitalWrite(13, toggleTrue ? HIGH : LOW);
+  digitalWrite(18, toggleTrue ? HIGH : LOW);
+  digitalWrite(19, toggleTrue ? HIGH : LOW);
+  digitalWrite(21, toggleTrue ? HIGH : LOW);
+  digitalWrite(22, toggleTrue ? HIGH : LOW);
+  //digitalWrite(23, toggleTrue ? HIGH : LOW);
+  digitalWrite(25, toggleTrue ? HIGH : LOW);
+  digitalWrite(26, toggleTrue ? HIGH : LOW);
+  digitalWrite(27, toggleTrue ? HIGH : LOW);
+  digitalWrite(32, toggleTrue ? HIGH : LOW);
+  digitalWrite(33, toggleTrue ? HIGH : LOW);
 }
 
 
@@ -501,6 +582,9 @@ void loop() {
   if (!arduino_loop_begin()) {
     return;
   }
+
+  toggleALL();
+
   dht_loop();
   wifi_loop();
   display_loop_begin();

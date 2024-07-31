@@ -58,7 +58,7 @@ GPIO	Input	Output	Notes
 #include <U8g2lib.h>
 
 //GLOBAL.ARDUINO
-bool arduino_serial_enable = false;
+bool arduino_serial_enable = true;
 bool arduino_serial_verbose = false;
 long arduino_serial_frequency = 115200;
 unsigned long arduino_loop_begin_ms = 0;
@@ -226,8 +226,14 @@ void display_loop_end() {
 //GLOBAL.WIFI
 bool wifi_enable = true;
 bool wifi_verbose = false;
-//uint8_t wifi_mac_custom[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-uint8_t wifi_mac_custom[] = { 0x0A, 0x00, 0x00, 0x01, 0x00, 0x01 };//10.0.0.101
+uint8_t wifi_mac_custom[] = { 0x0A, 0x00, 0x00, 0x01, 0x00, 0x01 };
+IPAddress local_IP(10, 0, 0, 101);
+IPAddress gateway(10, 0, 0, 138);
+//IPAddress gateway(192, 168, 5, 1);
+//IPAddress gateway(192, 168, 7, 2);
+IPAddress subnet(255, 255, 0, 0);
+IPAddress primaryDNS(8, 8, 8, 8);    // optional
+IPAddress secondaryDNS(8, 8, 4, 4);  // optional
 const uint32_t wifi_loop_interval_ms = 10000;
 String wifi_ip_current;
 String wifi_ssid_current;
@@ -235,11 +241,6 @@ String wifi_ssid_current;
 String wifi_setup_mac;
 WiFiMulti wifiMulti;
 AsyncWebServer server(80);
-//IPAddress local_IP(192, 168, 1, 184);
-//IPAddress gateway(192, 168, 1, 1);
-//IPAddress subnet(255, 255, 0, 0);
-//IPAddress primaryDNS(8, 8, 8, 8);   // optional
-//IPAddress secondaryDNS(8, 8, 4, 4); // optional
 String mac2String(byte ar[]) {
   String s;
   for (byte i = 0; i < 6; ++i) {
@@ -256,6 +257,226 @@ const char index_html[] PROGMEM = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <script>
+      function toggled(el) {
+        var isChecked = el.parentElement.getElementsByClassName("toggle-checkbox")[0];
+        if (isChecked.checked == true) {
+          isChecked.checked = false;
+        } else {
+          isChecked.checked = true;
+        }
+      }
+  </script>
+  <style>
+      .toggle {
+        position: relative;
+        display: inline-block;
+        box-sizing: border-box;
+        height: 15.32px;
+        width: 30.33px;
+        border: 1px solid #b8cfd9;
+        border-radius: 17.5px;
+        background-color: #ffffff;
+      }
+      /* After slide changes */
+      .toggle:after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        top: 1px;
+        left: 1px;
+        transition: all 0.5s;
+        height: 11.62px;
+        width: 11.96px;
+        background-color: #8566c1;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+      }
+      .toggle-checkbox:checked+.toggle::after {
+        left: 59%;
+        background-color: white;
+      }
+      /* Checkbox cheked toggle label bg color */
+      .toggle-checkbox:checked+.toggle {
+        height: 15.32px;
+        width: 30.33px;
+        border-radius: 17.5px;
+        background-color: #8566c1;
+      }
+      /* Checkbox vanished */
+      .toggle-checkbox {
+        display: none;
+      }
+      .toggle-checkbox:checked+.toggle::after {
+        left: 59%;
+        background-color: white;
+      }
+      /* Checkbox cheked toggle label bg color */
+      .toggle-checkbox:checked+.toggle {
+        height: 15.32px;
+        width: 30.33px;
+        border-radius: 17.5px;
+        background-color: #8566c1;
+      }
+      /* Checkbox vanished */
+      .toggle-checkbox {
+        display: none;
+      }
+  </style>
+  <script>
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("temperature").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/t", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("humidity").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/h", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("clock").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/c", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D04").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D04", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D13").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D13", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D18").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D18", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D19").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D19", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D21").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D21", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D22").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D22", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D23").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D23", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D25").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D25", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D27").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D27", true);
+      xhttp.send();
+    }, 10000 ) ;
+
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D32").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D32", true);
+      xhttp.send();
+    }, 10000 ) ;
+    
+    setInterval(function ( ) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("D33").innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/D33", true);
+      xhttp.send();
+    }, 10000 ) ;
+    </script>
 </head>
 <body>
   <p>
@@ -290,41 +511,117 @@ const char index_html[] PROGMEM = R"rawliteral(
     <span class="dht-labels">IP#</span> 
     <span id="device">%IP%</span>
   </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D04:</span> 
+      <span id="D04">%D04%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D04cb" class="toggle-checkbox" />
+        <label for="D04cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D13:</span> 
+      <span id="D13">%D13%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D13cb" class="toggle-checkbox" />
+        <label for="D13cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D18:</span> 
+      <span id="D18">%D18%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D18cb" class="toggle-checkbox" />
+        <label for="D18cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D19:</span> 
+      <span id="D19">%D19%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D19cb" class="toggle-checkbox" />
+        <label for="D19cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D21:</span> 
+      <span id="D21">%D21%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D21cb" class="toggle-checkbox" />
+        <label for="D21cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D22:</span> 
+      <span id="D22">%D22%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D22cb" class="toggle-checkbox" />
+        <label for="D22cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D25:</span> 
+      <span id="D25">%D25%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D25cb" class="toggle-checkbox" />
+        <label for="D25cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D27:</span> 
+      <span id="D27">%D27%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D27cb" class="toggle-checkbox" />
+        <label for="D27cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D32:</span> 
+      <span id="D32">%D32%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D32cb" class="toggle-checkbox" />
+        <label for="D32cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
+  <p>
+    <div>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D33:</span> 
+      <span id="D33">%D33%</span>
+      <div class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D33cb" class="toggle-checkbox" />
+        <label for="D33cb" class="toggle"> </label>
+      </div>
+    </div>
+  </p>
 </body>
-<script>
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("temperature").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/t", true);
-  xhttp.send();
-}, 10000 ) ;
-
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("humidity").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/h", true);
-  xhttp.send();
-}, 10000 ) ;
-
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("clock").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/c", true);
-  xhttp.send();
-}, 10000 ) ;
-</script>
 </html>)rawliteral";
 String index_html_processor(const String& var) {
   if (var == "IP") {
@@ -344,6 +641,39 @@ String index_html_processor(const String& var) {
   }
   if (var == "CLK") {
     return arduino_readable_clock;
+  }
+  if (var == "D04") {
+    return String(digitalRead(4));
+  }
+  if (var == "D13") {
+    return String(digitalRead(13));
+  }
+  if (var == "D18") {
+    return String(digitalRead(18));
+  }
+  if (var == "D19") {
+    return String(digitalRead(19));
+  }
+  if (var == "D21") {
+    return String(digitalRead(21));
+  }
+  if (var == "D22") {
+    return String(digitalRead(22));
+  }
+  //if (var == "D23") {
+  //  return String(digitalRead(23));
+  //}
+  if (var == "D25") {
+    return String(digitalRead(25));
+  }
+  if (var == "D27") {
+    return String(digitalRead(27));
+  }
+  if (var == "D32") {
+    return String(digitalRead(32));
+  }
+  if (var == "D33") {
+    return String(digitalRead(33));
   }
   return String();
 }
@@ -375,6 +705,11 @@ void _wifi_global_load() {
 }
 void wifi_setup() {
   if (arduino_serial_enable) Serial.println(F("wifi_setup.connecting.init"));
+  if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    if (arduino_serial_enable) Serial.println("wifi_setup.static ip.ok");
+  } else {
+    if (arduino_serial_enable) Serial.println("wifi_setup.static ip.failed");
+  }
   _wifi_global_clear();
   if (!wifi_enable) {
     if (arduino_serial_enable) Serial.println(F("wifi_setup.disabled!"));
@@ -386,6 +721,11 @@ void wifi_setup() {
   wifiMulti.addAP("Mebosa", "Bugun19112018");
   wifiMulti.addAP("Mesametal", "DateIs01062015");
   wifiMulti.addAP("MesaMetalWF", "DateIs01062015");
+  wifiMulti.addAP("MT65_0", "mebosamesametal");
+  wifiMulti.addAP("MT65_2", "mebosamesametal");
+  wifiMulti.addAP("MT65_2", "mebosamesametal");
+  wifiMulti.addAP("APT63_ARKA", "mebosamesametal");
+  wifiMulti.addAP("APT63_TTNET", "mebosamesametal");
   Serial.println(F("wifi_setup.connecting..."));
   if (wifiMulti.run() == WL_CONNECTED) {
     _wifi_global_load();
@@ -472,6 +812,50 @@ bool _wifi_config() {
     arduino_readable_clock = arduino_loop_readable_clock();
     request->send_P(200, "text/plain", arduino_readable_clock.c_str());
   });
+  server.on("/D04", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(4)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/D13", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(13)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/D18", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(18)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/D19", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(19)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/D21", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(21)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/D22", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(22)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+//  server.on("/D23", HTTP_GET, [](AsyncWebServerRequest* request) {//DHT
+//    if (arduino_serial_enable) Serial.println(String(digitalRead(4)));
+//    request->send_P(200, "text/plain", dht_t_chr);
+//  });
+  server.on("/D25", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(25)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/D27", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(4)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/D32", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(32)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
+  server.on("/D33", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (arduino_serial_enable) Serial.println(String(digitalRead(33)));
+    request->send_P(200, "text/plain", dht_t_chr);
+  });
   server.begin();
   wifi_config_done = true;
   if (arduino_serial_enable) Serial.println(F("wifi_config.end"));
@@ -501,6 +885,7 @@ void loop() {
   if (!arduino_loop_begin()) {
     return;
   }
+
   dht_loop();
   wifi_loop();
   display_loop_begin();
