@@ -136,6 +136,9 @@ void arduino_loop_end() {
   arduino_loop_prev_ms = arduino_loop_begin_ms;
   if (arduino_serial_enable && arduino_serial_verbose) Serial.println(F("arduino_loop_end.end"));
 }
+String getStr(int pinIdx) {
+  return digitalRead(pinIdx) == HIGH ? F("ON") : F("0FF");
+}
 
 //GLOBAL.DHT
 bool dht_enable = true;
@@ -621,40 +624,40 @@ String index_html_processor(const String& var) {
     return arduino_readable_clock;
   }
   if (var == "D04") {
-    return String(digitalRead(4));
+    return getStr(04);
   }
   if (var == "D13") {
-    return String(digitalRead(13));
+    return getStr(13);
   }
   if (var == "D18") {
-    return String(digitalRead(18));
+    return getStr(18);
   }
   if (var == "D19") {
-    return String(digitalRead(19));
+    return getStr(19);
   }
   //  if (var == "D21") {//SDA
-  //    return String(digitalRead(21));
+  //  return getStr(21);
   //  }
   //  if (var == "D22") {//SCL
-  //    return String(digitalRead(22));
+  //  return getStr(22);
   //  }
   //if (var == "D23") {//DHT
-  //  return String(digitalRead(23));
+  //  return getStr(23);
   //}
   if (var == "D25") {
-    return String(digitalRead(25));
+    return getStr(25);
   }
   if (var == "D26") {
-    return String(digitalRead(26));
+    return getStr(26);
   }
   if (var == "D27") {
-    return String(digitalRead(27));
+    return getStr(27);
   }
   if (var == "D32") {
-    return String(digitalRead(32));
+    return getStr(32);
   }
   if (var == "D33") {
-    return String(digitalRead(33));
+    return getStr(33);
   }
   return String();
 }
@@ -794,62 +797,62 @@ bool _wifi_config() {
     request->send_P(200, "text/plain", arduino_readable_clock.c_str());
   });
   server.on("/D04", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(4) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(04);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D13", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(13) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(13);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D18", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(18) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(18);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D19", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(19) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(19);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
   //  server.on("/D21", HTTP_GET, [](AsyncWebServerRequest* request) {//SDA
-  //    String val = digitalRead(21) == HIGH ? F("ON") : F("0FF");
+  //  String val =   getStr(21);
   //    if (arduino_serial_enable) Serial.println(val);
   //    request->send_P(200, "text/plain", val.c_str());
   //  });
   //  server.on("/D22", HTTP_GET, [](AsyncWebServerRequest* request) {//SCL
-  //    String val = digitalRead(22) == HIGH ? F("ON") : F("0FF");
+  //  String val =   getStr(22);
   //    if (arduino_serial_enable) Serial.println(val);
   //    request->send_P(200, "text/plain", val.c_str());
   //  });
   //  server.on("/D23", HTTP_GET, [](AsyncWebServerRequest* request) {//DHT
-  //    String val = digitalRead(23) == HIGH ? F("ON") : F("0FF");
+  //  String val =   getStr(23);
   //    if (arduino_serial_enable) Serial.println(val);
   //    request->send_P(200, "text/plain", val.c_str());
   //  });
   server.on("/D25", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(25) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(25);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D26", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(26) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(26);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D27", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(27) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(27);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D32", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(32) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(32);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
   server.on("/D33", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String val = digitalRead(33) == HIGH ? F("ON") : F("0FF");
+    String val = getStr(33);
     if (arduino_serial_enable) Serial.println(val);
     request->send_P(200, "text/plain", val.c_str());
   });
