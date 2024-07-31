@@ -407,17 +407,6 @@ const char index_html[] PROGMEM = R"rawliteral(
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("D23").innerHTML = this.responseText;
-        }
-      };
-      xhttp.open("GET", "/D23", true);
-      xhttp.send();
-    }, 10000 ) ;
-
-    setInterval(function ( ) {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
           document.getElementById("D25").innerHTML = this.responseText;
         }
       };
