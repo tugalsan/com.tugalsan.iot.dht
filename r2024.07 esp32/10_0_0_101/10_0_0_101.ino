@@ -41,6 +41,9 @@ GPIO	Input	Output	Notes
 //ARDUINO.IMPORT
 #include <Arduino.h>
 
+//KEYPAD.IMPORT
+#include <Keypad.h>
+
 //WIFI.IMPORT
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -56,6 +59,19 @@ GPIO	Input	Output	Notes
 #include <Arduino.h>
 #include <Wire.h>
 #include <U8g2lib.h>
+
+//GLOBAL.KEY
+//const byte ROWS = 4;  //four rows
+//const byte COLS = 4;  //four columns
+//char keys[ROWS][COLS] = {
+//  { '1', '2', '3', 'A' },
+//  { '4', '5', '6', 'B' },
+//  { '7', '8', '9', 'C' },
+//  { '*', '0', '#', 'D' }
+//};
+//byte rowPins[ROWS] = { 5, 4, 3, 2 };  //connect to the row pinouts of the keypad
+//byte colPins[COLS] = { 9, 8, 7, 6 };  //connect to the column pinouts of the keypad
+//Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 //GLOBAL.ARDUINO
 bool arduino_serial_enable = true;
@@ -231,16 +247,17 @@ void display_loop_end() {
 bool wifi_enable = true;
 bool wifi_verbose = false;
 uint8_t wifi_mac_custom[] = { 0x0A, 0x00, 0x00, 0x01, 0x00, 0x01 };
-IPAddress local_IP(10, 0, 0, 101);
-IPAddress gateway(10, 0, 0, 138);
+//IPAddress local_IP(10, 0, 0, 101);
+IPAddress local_IP(192, 168, 7, 101);
+//IPAddress gateway(10, 0, 0, 138);
 //IPAddress gateway(192, 168, 5, 1);
-//IPAddress gateway(192, 168, 7, 2);
+IPAddress gateway(192, 168, 7, 2);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(8, 8, 8, 8);    // optional
 IPAddress secondaryDNS(8, 8, 4, 4);  // optional
 const uint32_t wifi_connection_timeout_ms = 10000;
 uint32_t wifi_connection_previous_ms = 0;
-const uint32_t wifi_connection_interval_ms = 10000;
+const uint32_t wifi_connection_interval_ms = 60000;
 String wifi_ip_current;
 String wifi_ssid_current;
 //String wifi_rssi_current;
@@ -554,7 +571,7 @@ void _wifi_global_clear() {
 }
 void _wifi_global_load() {
   wifi_connected = true;
-   if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+  if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
     if (arduino_serial_enable) Serial.println("wifi_setup.static ip.ok");
   } else {
     if (arduino_serial_enable) Serial.println("wifi_setup.static ip.failed");
@@ -602,7 +619,7 @@ void wifi_setup() {
 }
 bool wifi_warmup = false;
 bool _wifi_warmup() {
-   if (false && wifi_warmup) {
+  if (false && wifi_warmup) {
     if (wifi_connection_previous_ms > arduino_loop_begin_ms) {
       wifi_connection_previous_ms = arduino_loop_begin_ms;
     }
@@ -800,6 +817,9 @@ void setup() {
     pinMode(33, OUTPUT);
   }
   if (true) {
+
+
+    //--BELOW MUST BE OUT
     pinMode(34, INPUT);
     pinMode(35, INPUT);
   }
@@ -822,10 +842,13 @@ void toggleALL() {
 }
 const char DEGREE_SYMBOL[] = { 0xB0, '\0' };
 void loop() {
+//  if (key){
+//    if (arduino_serial_enable) Serial.println(key);
+//  }
   if (!arduino_loop_begin()) {
     return;
   }
-  toggleALL();
+  //toggleALL();
   dht_loop();
   wifi_loop();
   display_loop_begin();
