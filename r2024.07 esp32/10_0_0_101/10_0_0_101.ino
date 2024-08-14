@@ -227,11 +227,11 @@ void display_loop_end() {
 bool wifi_enable = true;
 bool wifi_verbose = false;
 uint8_t wifi_mac_custom[] = { 0x0A, 0x00, 0x00, 0x01, 0x00, 0x01 };
-//IPAddress local_IP(10, 0, 0, 101);
-IPAddress local_IP(192, 168, 7, 101);
-//IPAddress gateway(10, 0, 0, 138);
+IPAddress local_IP(10, 0, 0, 101);
+//IPAddress local_IP(192, 168, 7, 101);
+IPAddress gateway(10, 0, 0, 138);
 //IPAddress gateway(192, 168, 5, 1);
-IPAddress gateway(192, 168, 7, 2);
+//IPAddress gateway(192, 168, 7, 2);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(8, 8, 8, 8);    // optional
 IPAddress secondaryDNS(8, 8, 4, 4);  // optional

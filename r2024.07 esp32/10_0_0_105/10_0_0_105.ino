@@ -226,20 +226,24 @@ void display_loop_end() {
 //GLOBAL.WIFI
 bool wifi_enable = true;
 bool wifi_verbose = false;
-//uint8_t wifi_mac_custom[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-uint8_t wifi_mac_custom[] = { 0x0A, 0x00, 0x00, 0x01, 0x00, 0x05 };//10.0.0.105
-const uint32_t wifi_loop_interval_ms = 10000;
+uint8_t wifi_mac_custom[] = { 0x0A, 0x00, 0x00, 0x01, 0x00, 0x05 };
+IPAddress local_IP(10, 0, 0, 105);
+//IPAddress local_IP(192, 168, 7, 101);
+IPAddress gateway(10, 0, 0, 138);
+//IPAddress gateway(192, 168, 5, 1);
+//IPAddress gateway(192, 168, 7, 2);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress primaryDNS(8, 8, 8, 8);    // optional
+IPAddress secondaryDNS(8, 8, 4, 4);  // optional
+const uint32_t wifi_connection_timeout_ms = 10000;
+uint32_t wifi_connection_previous_ms = 0;
+const uint32_t wifi_connection_interval_ms = 60000;
 String wifi_ip_current;
 String wifi_ssid_current;
 //String wifi_rssi_current;
 String wifi_setup_mac;
 WiFiMulti wifiMulti;
 AsyncWebServer server(80);
-//IPAddress local_IP(192, 168, 1, 184);
-//IPAddress gateway(192, 168, 1, 1);
-//IPAddress subnet(255, 255, 0, 0);
-//IPAddress primaryDNS(8, 8, 8, 8);   // optional
-//IPAddress secondaryDNS(8, 8, 4, 4); // optional
 String mac2String(byte ar[]) {
   String s;
   for (byte i = 0; i < 6; ++i) {
@@ -256,6 +260,21 @@ const char index_html[] PROGMEM = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <script>
+    function refreshId(id, servlet){
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById(id).innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", "/" + servlet + pinIdx, true);
+      xhttp.send();
+    }
+    setInterval(function () { refreshId('temperature', 't') }, 10000 ) ;
+    setInterval(function () { refreshId('humidity', 'h') }, 10000 ) ;
+    setInterval(function () { refreshId('clock', 'c') }, 10000 ) ;
+    </script>
 </head>
 <body>
   <p>
@@ -285,46 +304,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     <span class="dht-labels">WIFI</span>
     <span id="clock">%SSID%</span>
   </p>
-  <p>
-    <i class="fas fa-paperclip" style="color:#05228a;"></i> 
-    <span class="dht-labels">IP#</span> 
-    <span id="device">%IP%</span>
-  </p>
 </body>
-<script>
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("temperature").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/t", true);
-  xhttp.send();
-}, 10000 ) ;
-
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("humidity").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/h", true);
-  xhttp.send();
-}, 10000 ) ;
-
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("clock").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/c", true);
-  xhttp.send();
-}, 10000 ) ;
-</script>
 </html>)rawliteral";
 String index_html_processor(const String& var) {
   if (var == "IP") {
@@ -359,6 +339,11 @@ void _wifi_global_clear() {
 }
 void _wifi_global_load() {
   wifi_connected = true;
+  if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    if (arduino_serial_enable) Serial.println("wifi_setup.static ip.ok");
+  } else {
+    if (arduino_serial_enable) Serial.println("wifi_setup.static ip.failed");
+  }
   wifi_setup_mac = WiFi.macAddress();
   wifi_ssid_current = String(WiFi.SSID());
   //  wifi_rssi_current = String(WiFi.RSSI());
@@ -386,6 +371,11 @@ void wifi_setup() {
   wifiMulti.addAP("Mebosa", "Bugun19112018");
   wifiMulti.addAP("Mesametal", "DateIs01062015");
   wifiMulti.addAP("MesaMetalWF", "DateIs01062015");
+  wifiMulti.addAP("MT65_0", "mebosamesametal");
+  wifiMulti.addAP("MT65_2", "mebosamesametal");
+  wifiMulti.addAP("MT65_2", "mebosamesametal");
+  wifiMulti.addAP("APT63_ARKA", "mebosamesametal");
+  wifiMulti.addAP("APT63_TTNET", "mebosamesametal");
   Serial.println(F("wifi_setup.connecting..."));
   if (wifiMulti.run() == WL_CONNECTED) {
     _wifi_global_load();
@@ -395,7 +385,16 @@ void wifi_setup() {
   }
   if (arduino_serial_enable) Serial.println(F("wifi_setup.end"));
 }
+bool wifi_warmup = false;
 bool _wifi_warmup() {
+  if (false && wifi_warmup) {
+    if (wifi_connection_previous_ms > arduino_loop_begin_ms) {
+      wifi_connection_previous_ms = arduino_loop_begin_ms;
+    }
+    if (arduino_loop_begin_ms - wifi_connection_previous_ms < wifi_connection_interval_ms) {
+      return true;
+    }
+  }
   if (arduino_serial_enable) Serial.println("wifi_warmup.scaning...");
   int n = WiFi.scanNetworks();
   if (arduino_serial_enable) Serial.println("wifi_warmup.scan done");
@@ -414,13 +413,16 @@ bool _wifi_warmup() {
       delay(10);
     }
   }
-  if (wifiMulti.run(wifi_loop_interval_ms) != WL_CONNECTED) {
+  //if (wifiMulti.run(wifi_connection_timeout_ms) != WL_CONNECTED) {
+  if (wifiMulti.run() != WL_CONNECTED) {
     if (arduino_serial_enable) Serial.println("wifi_warmup.connecting.failed");
     _wifi_global_clear();
     delay(1000);
+    wifi_warmup = false;
     return false;
   }
   _wifi_global_load();
+  wifi_warmup = true;
   return true;
 }
 bool wifi_config_done = false;
@@ -493,14 +495,19 @@ void setup() {
   wifi_setup();
   display_setup();
   dht_setup();
+  //VIN GND [13]  12   14  [27] [26] [25] [33] [32] (35) (34)  VN   VP   EN
+  //3V3 GND  15   02  [04]  R2   T2   06  [18] [19] [21]  R0   T0  [22] [23]
+  // [in/out] (in)
 }
-
-
 const char DEGREE_SYMBOL[] = { 0xB0, '\0' };
 void loop() {
+//  if (key){
+//    if (arduino_serial_enable) Serial.println(key);
+//  }
   if (!arduino_loop_begin()) {
     return;
   }
+  //toggleALL();
   dht_loop();
   wifi_loop();
   display_loop_begin();
