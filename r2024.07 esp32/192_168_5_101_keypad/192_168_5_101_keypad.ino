@@ -41,6 +41,9 @@ GPIO	Input	Output	Notes
 //ARDUINO.IMPORT
 #include <Arduino.h>
 
+//KEYPAD.IMPORT
+#include <Keypad.h>
+
 //WIFI.IMPORT
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -57,8 +60,21 @@ GPIO	Input	Output	Notes
 #include <Wire.h>
 #include <U8g2lib.h>
 
+//GLOBAL.KEY
+//const byte ROWS = 4;  //four rows
+//const byte COLS = 4;  //four columns
+//char keys[ROWS][COLS] = {
+//  { '1', '2', '3', 'A' },
+//  { '4', '5', '6', 'B' },
+//  { '7', '8', '9', 'C' },
+//  { '*', '0', '#', 'D' }
+//};
+//byte rowPins[ROWS] = { 5, 4, 3, 2 };  //connect to the row pinouts of the keypad
+//byte colPins[COLS] = { 9, 8, 7, 6 };  //connect to the column pinouts of the keypad
+//Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
 //GLOBAL.ARDUINO
-bool arduino_serial_enable = false;
+bool arduino_serial_enable = true;
 bool arduino_serial_verbose = false;
 long arduino_serial_frequency = 115200;
 unsigned long arduino_loop_begin_ms = 0;
@@ -135,6 +151,10 @@ void arduino_loop_end() {
   if (arduino_serial_enable && arduino_serial_verbose) Serial.println(F("arduino_loop_end.begin"));
   arduino_loop_prev_ms = arduino_loop_begin_ms;
   if (arduino_serial_enable && arduino_serial_verbose) Serial.println(F("arduino_loop_end.end"));
+}
+
+String getStr(int pinIdx) {
+  return digitalRead(pinIdx) == HIGH ? F("ON") : F("0FF");
 }
 
 //GLOBAL.DHT
@@ -260,6 +280,61 @@ const char index_html[] PROGMEM = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<style>
+      .toggle {
+        position: relative;
+        display: inline-block;
+        box-sizing: border-box;
+        height: 15.32px;
+        width: 30.33px;
+        border: 1px solid #b8cfd9;
+        border-radius: 17.5px;
+        background-color: #ffffff;
+      }
+      /* After slide changes */
+      .toggle:after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        top: 1px;
+        left: 1px;
+        transition: all 0.5s;
+        height: 11.62px;
+        width: 11.96px;
+        background-color: #8566c1;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+      }
+      .toggle-checkbox:checked+.toggle::after {
+        left: 59%;
+        background-color: white;
+      }
+      /* Checkbox cheked toggle label bg color */
+      .toggle-checkbox:checked+.toggle {
+        height: 15.32px;
+        width: 30.33px;
+        border-radius: 17.5px;
+        background-color: #8566c1;
+      }
+      /* Checkbox vanished */
+      .toggle-checkbox {
+        display: none;
+      }
+      .toggle-checkbox:checked+.toggle::after {
+        left: 59%;
+        background-color: white;
+      }
+      /* Checkbox cheked toggle label bg color */
+      .toggle-checkbox:checked+.toggle {
+        height: 15.32px;
+        width: 30.33px;
+        border-radius: 17.5px;
+        background-color: #8566c1;
+      }
+      /* Checkbox vanished */
+      .toggle-checkbox {
+        display: none;
+      }
+  </style>
   <script>
     function refreshId(id, servlet){
       var xhttp = new XMLHttpRequest();
@@ -271,9 +346,44 @@ const char index_html[] PROGMEM = R"rawliteral(
       xhttp.open("GET", "/" + servlet + pinIdx, true);
       xhttp.send();
     }
+    function refreshPin(pinIdx){
+      refreshId("D" + pinIdx, "D" + pinIdx);
+    }
+    function set(pinIdx){
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          refreshPin(pinIdx);
+        }
+      };
+      xhttp.open("GET", "/S" + pinIdx, true);
+      xhttp.send();
+    }
+    function toggled(el, pinIdx) {
+      var isChecked = el.parentElement.getElementsByClassName("toggle-checkbox")[0];
+      if (isChecked.checked == true) {
+        isChecked.checked = false;
+        document.getElementById("D" + pinIdx).innerHTML = "⌛";
+        set(pinIdx);
+      } else {
+        isChecked.checked = true;
+        document.getElementById("D" + pinIdx).innerHTML = "⌛";
+        set(pinIdx);
+      }
+    }
     setInterval(function () { refreshId('temperature', 't') }, 10000 ) ;
     setInterval(function () { refreshId('humidity', 'h') }, 10000 ) ;
     setInterval(function () { refreshId('clock', 'c') }, 10000 ) ;
+    setInterval(function () { refreshId('clock', 'c') }, 10000 ) ;
+    setInterval(function () { refreshPin('4') }, 10000 ) ;
+    setInterval(function () { refreshPin('13') }, 10000 ) ;
+    setInterval(function () { refreshPin('13') }, 10000 ) ;
+    setInterval(function () { refreshPin('19') }, 10000 ) ;
+    setInterval(function () { refreshPin('25') }, 10000 ) ;
+    setInterval(function () { refreshPin('26') }, 10000 ) ;
+    setInterval(function () { refreshPin('27') }, 10000 ) ;
+    setInterval(function () { refreshPin('32') }, 10000 ) ;
+    setInterval(function () { refreshPin('33') }, 10000 ) ;
     </script>
 </head>
 <body>
@@ -304,6 +414,92 @@ const char index_html[] PROGMEM = R"rawliteral(
     <span class="dht-labels">WIFI</span>
     <span id="clock">%SSID%</span>
   </p>
+  <p>
+    <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+    <span class="dht-labels">IP#</span> 
+    <span id="device">%IP%</span>
+  </p>
+  <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D04:</span> 
+      <span id="D04">%D04%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D04cb" class="toggle-checkbox" />
+        <label for="D04cb" class="toggle"> </label>
+      </span>
+  </p>
+  <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D13:</span> 
+      <span id="D13">%D13%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D13cb" class="toggle-checkbox" />
+        <label for="D13cb" class="toggle"> </label>
+      </span>
+  </p>
+  <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D18:</span> 
+      <span id="D18">%D18%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D18cb" class="toggle-checkbox" />
+        <label for="D18cb" class="toggle"> </label>
+      </span>
+  </p>
+  <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D19:</span> 
+      <span id="D19">%D19%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D19cb" class="toggle-checkbox" />
+        <label for="D19cb" class="toggle"> </label>
+      </span>
+  </p>
+  <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D25:</span> 
+      <span id="D25">%D25%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D25cb" class="toggle-checkbox" />
+        <label for="D25cb" class="toggle"> </label>
+      </span>
+  </p>
+   <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D26:</span> 
+      <span id="D26">%D26%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D26cb" class="toggle-checkbox" />
+        <label for="D26cb" class="toggle"> </label>
+      </span>
+  </p>
+  <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D27:</span> 
+      <span id="D27">%D27%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D27cb" class="toggle-checkbox" />
+        <label for="D27cb" class="toggle"> </label>
+      </span>
+  </p>
+  <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D32:</span> 
+      <span id="D32">%D32%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D32cb" class="toggle-checkbox" />
+        <label for="D32cb" class="toggle"> </label>
+      </span>
+  </p>
+  <p>
+      <i class="fas fa-paperclip" style="color:#05228a;"></i> 
+      <span class="dht-labels">D33:</span> 
+      <span id="D33">%D33%</span>
+      <span class="idm-switch_div div-container" onclick="toggled(this)">
+        <input type="checkbox" id="D33cb" class="toggle-checkbox" />
+        <label for="D33cb" class="toggle"> </label>
+      </span>
+  </p>
 </body>
 </html>)rawliteral";
 String index_html_processor(const String& var) {
@@ -324,6 +520,42 @@ String index_html_processor(const String& var) {
   }
   if (var == "CLK") {
     return arduino_readable_clock;
+  }
+  if (var == "D04") {
+    return getStr(04);
+  }
+  if (var == "D13") {
+    return getStr(13);
+  }
+  if (var == "D18") {
+    return getStr(18);
+  }
+  if (var == "D19") {
+    return getStr(19);
+  }
+  //  if (var == "D21") {//SDA
+  //  return getStr(21);
+  //  }
+  //  if (var == "D22") {//SCL
+  //  return getStr(22);
+  //  }
+  //if (var == "D23") {//DHT
+  //  return getStr(23);
+  //}
+  if (var == "D25") {
+    return getStr(25);
+  }
+  if (var == "D26") {
+    return getStr(26);
+  }
+  if (var == "D27") {
+    return getStr(27);
+  }
+  if (var == "D32") {
+    return getStr(32);
+  }
+  if (var == "D33") {
+    return getStr(33);
   }
   return String();
 }
@@ -474,6 +706,66 @@ bool _wifi_config() {
     arduino_readable_clock = arduino_loop_readable_clock();
     request->send_P(200, "text/plain", arduino_readable_clock.c_str());
   });
+  server.on("/D04", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(04);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
+  server.on("/D13", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(13);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
+  server.on("/D18", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(18);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
+  server.on("/D19", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(19);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
+  //  server.on("/D21", HTTP_GET, [](AsyncWebServerRequest* request) {//SDA
+  //  String val =   getStr(21);
+  //    if (arduino_serial_enable) Serial.println(val);
+  //    request->send_P(200, "text/plain", val.c_str());
+  //  });
+  //  server.on("/D22", HTTP_GET, [](AsyncWebServerRequest* request) {//SCL
+  //  String val =   getStr(22);
+  //    if (arduino_serial_enable) Serial.println(val);
+  //    request->send_P(200, "text/plain", val.c_str());
+  //  });
+  //  server.on("/D23", HTTP_GET, [](AsyncWebServerRequest* request) {//DHT
+  //  String val =   getStr(23);
+  //    if (arduino_serial_enable) Serial.println(val);
+  //    request->send_P(200, "text/plain", val.c_str());
+  //  });
+  server.on("/D25", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(25);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
+  server.on("/D26", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(26);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
+  server.on("/D27", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(27);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
+  server.on("/D32", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(32);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
+  server.on("/D33", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String val = getStr(33);
+    if (arduino_serial_enable) Serial.println(val);
+    request->send_P(200, "text/plain", val.c_str());
+  });
   server.begin();
   wifi_config_done = true;
   if (arduino_serial_enable) Serial.println(F("wifi_config.end"));
@@ -498,6 +790,55 @@ void setup() {
   //VIN GND [13]  12   14  [27] [26] [25] [33] [32] (35) (34)  VN   VP   EN
   //3V3 GND  15   02  [04]  R2   T2   06  [18] [19] [21]  R0   T0  [22] [23]
   // [in/out] (in)
+  if (true) {
+    digitalWrite(4, LOW);
+    pinMode(4, OUTPUT);
+    digitalWrite(13, LOW);
+    pinMode(13, OUTPUT);
+    digitalWrite(18, LOW);
+    pinMode(18, OUTPUT);
+    digitalWrite(19, LOW);
+    pinMode(19, OUTPUT);
+    //digitalWrite(21, LOW);//SDA
+    //pinMode(21, OUTPUT);
+    //digitalWrite(22, LOW);//SCL
+    //pinMode(22, OUTPUT);
+    //digitalWrite(23, LOW);//DHT
+    //pinMode(23, OUTPUT);
+    digitalWrite(25, LOW);
+    pinMode(25, OUTPUT);
+    digitalWrite(26, LOW);
+    pinMode(26, OUTPUT);
+    digitalWrite(27, LOW);
+    pinMode(27, OUTPUT);
+    digitalWrite(32, LOW);
+    pinMode(32, OUTPUT);
+    digitalWrite(33, LOW);
+    pinMode(33, OUTPUT);
+  }
+  if (true) {
+
+
+    //--BELOW MUST BE OUT
+    pinMode(34, INPUT);
+    pinMode(35, INPUT);
+  }
+}
+bool toggleTrue = true;
+void toggleALL() {
+  toggleTrue = !toggleTrue;
+  digitalWrite(4, toggleTrue ? HIGH : LOW);
+  digitalWrite(13, toggleTrue ? HIGH : LOW);
+  digitalWrite(18, toggleTrue ? HIGH : LOW);
+  digitalWrite(19, toggleTrue ? HIGH : LOW);
+  //digitalWrite(21, toggleTrue ? HIGH : LOW);//SDA
+  //digitalWrite(22, toggleTrue ? HIGH : LOW);//SCL
+  //digitalWrite(23, toggleTrue ? HIGH : LOW);//DHT
+  digitalWrite(25, toggleTrue ? HIGH : LOW);
+  digitalWrite(26, toggleTrue ? HIGH : LOW);
+  digitalWrite(27, toggleTrue ? HIGH : LOW);
+  digitalWrite(32, toggleTrue ? HIGH : LOW);
+  digitalWrite(33, toggleTrue ? HIGH : LOW);
 }
 const char DEGREE_SYMBOL[] = { 0xB0, '\0' };
 void loop() {
