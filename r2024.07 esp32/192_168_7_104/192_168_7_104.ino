@@ -368,6 +368,7 @@ void wifi_setup() {
   if (arduino_serial_enable) Serial.println(F("wifi_setup.begin"));
   WiFi.mode(WIFI_STA);
   esp_wifi_set_mac(WIFI_IF_STA, wifi_mac_custom);
+  wifiMulti.addAP("MebosaKK", "Bugun19112018");
   wifiMulti.addAP("Mebosa", "Bugun19112018");
   wifiMulti.addAP("Mesametal", "DateIs01062015");
   wifiMulti.addAP("MesaMetalWF", "DateIs01062015");
@@ -376,6 +377,7 @@ void wifi_setup() {
   wifiMulti.addAP("MT65_2", "mebosamesametal");
   wifiMulti.addAP("APT63_ARKA", "mebosamesametal");
   wifiMulti.addAP("APT63_TTNET", "mebosamesametal");
+  wifiMulti.addAP("APT63_Salon", "mebosamesametal");
   Serial.println(F("wifi_setup.connecting..."));
   if (wifiMulti.run() == WL_CONNECTED) {
     _wifi_global_load();
