@@ -226,12 +226,12 @@ void display_loop_end() {
 //GLOBAL.WIFI
 bool wifi_enable = true;
 bool wifi_verbose = false;
-uint8_t wifi_mac_custom[] = { 0xC0, 0xA8, 0x07, 0x01, 0x00, 0x01 };
-//IPAddress local_IP(10, 0, 0, 101);
-IPAddress local_IP(192, 168, 7, 101);
-//IPAddress gateway(10, 0, 0, 138);
+uint8_t wifi_mac_custom[] = { 0x0A, 0x00, 0x00, 0x01, 0x01, 0x01 };
+IPAddress local_IP(10, 0, 0, 111);
+//IPAddress local_IP(192, 168, 7, 101);
+IPAddress gateway(10, 0, 0, 138);
 //IPAddress gateway(192, 168, 5, 1);
-IPAddress gateway(192, 168, 7, 2);
+//IPAddress gateway(192, 168, 7, 2);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(8, 8, 8, 8);    // optional
 IPAddress secondaryDNS(8, 8, 4, 4);  // optional
@@ -368,7 +368,6 @@ void wifi_setup() {
   if (arduino_serial_enable) Serial.println(F("wifi_setup.begin"));
   WiFi.mode(WIFI_STA);
   esp_wifi_set_mac(WIFI_IF_STA, wifi_mac_custom);
-  wifiMulti.addAP("MebosaKK", "Bugun19112018");
   wifiMulti.addAP("Mebosa", "Bugun19112018");
   wifiMulti.addAP("Mesametal", "DateIs01062015");
   wifiMulti.addAP("MesaMetalWF", "DateIs01062015");
@@ -377,7 +376,6 @@ void wifi_setup() {
   wifiMulti.addAP("MT65_2", "mebosamesametal");
   wifiMulti.addAP("APT63_ARKA", "mebosamesametal");
   wifiMulti.addAP("APT63_TTNET", "mebosamesametal");
-  wifiMulti.addAP("APT63_Salon", "mebosamesametal");
   Serial.println(F("wifi_setup.connecting..."));
   if (wifiMulti.run() == WL_CONNECTED) {
     _wifi_global_load();
